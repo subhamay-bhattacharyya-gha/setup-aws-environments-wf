@@ -58,6 +58,7 @@ jobs:
           PROD_ACCOUNT: ${{ inputs.prod-environment }}
           AWS_ACCOUNTS: ${{ vars.AWS_ACCOUNTS }}
           AWS_OIDC_ROLE: ${{ vars.AWS_OIDC_ROLE }}
+          CODE_REPO_S3_BUCKET_BASE_NAME: ${{ vars.CODE_REPO_S3_BUCKET_BASE_NAME }}
         run: |
           declare -A ENV_ACCOUNT_MAP=(
             [ci]="$CI_ACCOUNT"
@@ -74,15 +75,20 @@ jobs:
             echo "Creating environment: $env"
             gh api --method PUT repos/${{ github.repository }}/environments/$env
 
-            echo "Adding secret to $env"
+            echo "Adding secret 'AWS Role Arn' to $env"
             gh secret set AWS_ROLE_ARN \
               --env "$env" \
               --body "arn:aws:iam::${account_id}:role/${AWS_OIDC_ROLE}"
 
-            echo "Adding variable to $env"
+            echo "Adding variable 'AWS Region' to $env"
             gh variable set AWS_REGION \
               --env "$env" \
               --body "${{ inputs.aws-region }}"
+
+            echo "Adding variable 'Code Repository S3 Bucket' to $env"
+            gh variable set CODE_REPO_S3_BUCKET \
+              --env "$env" \
+              --body "${CODE_REPO_S3_BUCKET_BASE_NAME}-${account_id}-${env}-${{ inputs.aws-region }}"
 
             echo "::endgroup::"
           done
