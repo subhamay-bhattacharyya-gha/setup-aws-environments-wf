@@ -85,6 +85,11 @@ jobs:
               --env "$env" \
               --body "${{ inputs.aws-region }}"
 
+            echo "Adding variable 'AWS Role Arn' to $env"
+            gh variable set AWS_ROLE_ARN \
+              --env "$env" \
+              --body "arn:aws:iam::${account_id}:role/${AWS_OIDC_ROLE}"
+
             echo "Adding variable 'Code Repository S3 Bucket' to $env"
             gh variable set CODE_REPO_S3_BUCKET \
               --env "$env" \
