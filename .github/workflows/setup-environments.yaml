@@ -44,11 +44,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # - name: Install GitHub CLI and jq
-      #   run: |
-      #     sudo apt update
-      #     sudo apt install gh jq -y
-
       - name: Create environments with secrets and variables
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -59,6 +54,7 @@ jobs:
           AWS_ACCOUNTS: ${{ vars.AWS_ACCOUNTS }}
           AWS_OIDC_ROLE: ${{ vars.AWS_OIDC_ROLE }}
           CODE_REPO_S3_BUCKET_BASE_NAME: ${{ vars.CODE_REPO_S3_BUCKET_BASE_NAME }}
+          S3_KMS_KEY_ALIAS: ${{ vars.S3_KMS_KEY_ALIAS }}
         run: |
           declare -A ENV_ACCOUNT_MAP=(
             [ci]="$CI_ACCOUNT"
@@ -67,10 +63,18 @@ jobs:
             [prod]="$PROD_ACCOUNT"
           )
 
+          declare -A ENV_NAME_MAP=(
+            [ci]="devl"
+            [devl]="devl"
+            [test]="test"
+            [prod]="prod"
+          )
+
           for env in "${!ENV_ACCOUNT_MAP[@]}"; do
             echo "::group::Processing environment: $env"
             account_name="${ENV_ACCOUNT_MAP[$env]}"
             account_id=$(echo "$AWS_ACCOUNTS" | jq -r --arg name "$account_name" '.[$name]')
+            env_name="${ENV_NAME_MAP[$env]}"
 
             echo "Creating environment: $env"
             gh api --method PUT repos/${{ github.repository }}/environments/$env
@@ -85,15 +89,15 @@ jobs:
               --env "$env" \
               --body "${{ inputs.aws-region }}"
 
-            echo "Adding variable 'AWS Role Arn' to $env"
-            gh variable set AWS_ROLE_ARN \
+            echo "Adding variable 'S3 Kms Key Alias' to $env"
+            gh variable set S3_KMS_KEY_ALIAS \
               --env "$env" \
-              --body "arn:aws:iam::${account_id}:role/${AWS_OIDC_ROLE}"
+              --body "alias/${S3_KMS_KEY_ALIAS}"
 
-            echo "Adding variable 'Code Repository S3 Bucket' to $env"
-            gh variable set CODE_REPO_S3_BUCKET \
+            echo "Adding secret 'Code Repository S3 Bucket' to $env"
+            gh secret set CODE_REPO_S3_BUCKET \
               --env "$env" \
-              --body "${CODE_REPO_S3_BUCKET_BASE_NAME}-${account_id}-${env}-${{ inputs.aws-region }}"
+              --body "${CODE_REPO_S3_BUCKET_BASE_NAME}-${account_id}-${env_name}-${{ inputs.aws-region }}"
 
             echo "::endgroup::"
           done
