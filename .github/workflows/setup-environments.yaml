@@ -44,10 +44,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install GitHub CLI and jq
-        run: |
-          sudo apt update
-          sudo apt install gh jq -y
+      # - name: Install GitHub CLI and jq
+      #   run: |
+      #     sudo apt update
+      #     sudo apt install gh jq -y
 
       - name: Create environments with secrets and variables
         env:
