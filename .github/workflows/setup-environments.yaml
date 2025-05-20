@@ -1,0 +1,103 @@
+name: Setup Environments
+
+on:
+  workflow_call:
+    inputs:
+      ci-environment:
+        description: "AWS Account Name for CI Environment."
+        required: true
+        type: string
+      devl-environment:
+        description: "AWS Account Name for Development Environment."
+        required: true
+        type: string
+      test-environment:
+        description: "AWS Account Name for Test Environment."
+        required: true
+        type: string
+      prod-environment:
+        description: "AWS Account Name for Production Environment."
+        required: true
+        type: string
+      aws-region:
+        description: "AWS region where the services will be deployed."
+        required: true
+        type: string
+
+    secrets:
+      GH_PAT:
+        description: "GitHub Personal Access Token for authentication"
+        required: true
+
+permissions:
+  contents: write
+  id-token: write
+  actions: write
+  deployments: write
+
+jobs:
+  setup-environments:
+    name: Bootstrap Environments
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create environments with secrets and variables
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          CI_ACCOUNT: ${{ inputs.ci-environment }}
+          DEVL_ACCOUNT: ${{ inputs.devl-environment }}
+          TEST_ACCOUNT: ${{ inputs.test-environment }}
+          PROD_ACCOUNT: ${{ inputs.prod-environment }}
+          AWS_ACCOUNTS: ${{ vars.AWS_ACCOUNTS }}
+          AWS_OIDC_ROLE: ${{ vars.AWS_OIDC_ROLE }}
+          CODE_REPO_S3_BUCKET_BASE_NAME: ${{ vars.CODE_REPO_S3_BUCKET_BASE_NAME }}
+          S3_KMS_KEY_ALIAS: ${{ vars.S3_KMS_KEY_ALIAS }}
+        run: |
+          declare -A ENV_ACCOUNT_MAP=(
+            [ci]="$CI_ACCOUNT"
+            [devl]="$DEVL_ACCOUNT"
+            [test]="$TEST_ACCOUNT"
+            [prod]="$PROD_ACCOUNT"
+          )
+
+          declare -A ENV_NAME_MAP=(
+            [ci]="devl"
+            [devl]="devl"
+            [test]="test"
+            [prod]="prod"
+          )
+
+          for env in "${!ENV_ACCOUNT_MAP[@]}"; do
+            echo "::group::Processing environment: $env"
+            account_name="${ENV_ACCOUNT_MAP[$env]}"
+            account_id=$(echo "$AWS_ACCOUNTS" | jq -r --arg name "$account_name" '.[$name]')
+            env_name="${ENV_NAME_MAP[$env]}"
+
+            echo "Creating environment: $env"
+            gh api --method PUT repos/${{ github.repository }}/environments/$env
+
+            echo "Adding secret 'AWS Role Arn' to $env"
+            gh secret set AWS_ROLE_ARN \
+              --env "$env" \
+              --body "arn:aws:iam::${account_id}:role/${AWS_OIDC_ROLE}"
+
+            echo "Adding variable 'AWS Region' to $env"
+            gh variable set AWS_REGION \
+              --env "$env" \
+              --body "${{ inputs.aws-region }}"
+
+            echo "Adding variable 'S3 Kms Key Alias' to $env"
+            gh variable set S3_KMS_KEY_ALIAS \
+              --env "$env" \
+              --body "alias/${S3_KMS_KEY_ALIAS}"
+
+            echo "Adding secret 'Code Repository S3 Bucket' to $env"
+            gh secret set CODE_REPO_S3_BUCKET \
+              --env "$env" \
+              --body "${CODE_REPO_S3_BUCKET_BASE_NAME}-${account_id}-${env_name}-${{ inputs.aws-region }}"
+
+            echo "::endgroup::"
+          done
