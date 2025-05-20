@@ -1,53 +1,121 @@
-# GitHub Action Template Repository
+# Setup Environments – GitHub Reusable Workflow
 
-![Release](https://github.com/subhamay-bhattacharyya-gha/github-action-template/actions/workflows/release.yaml/badge.svg)&nbsp;![Commit Activity](https://img.shields.io/github/commit-activity/t/subhamay-bhattacharyya-gha/github-action-template)&nbsp;![Last Commit](https://img.shields.io/github/last-commit/subhamay-bhattacharyya-gha/github-action-template)&nbsp;![Release Date](https://img.shields.io/github/release-date/subhamay-bhattacharyya-gha/github-action-template)&nbsp;![Repo Size](https://img.shields.io/github/repo-size/subhamay-bhattacharyya-gha/github-action-template)&nbsp;![File Count](https://img.shields.io/github/directory-file-count/subhamay-bhattacharyya-gha/github-action-template)&nbsp;![Issues](https://img.shields.io/github/issues/subhamay-bhattacharyya-gha/github-action-template)&nbsp;![Top Language](https://img.shields.io/github/languages/top/subhamay-bhattacharyya-gha/github-action-template)&nbsp;![Custom Endpoint](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bsubhamay/06e35985280456b113298ed56c626e73/raw/github-action-template.json?)
+![Release](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/actions/workflows/release.yaml/badge.svg)&nbsp;![Commit Activity](https://img.shields.io/github/commit-activity/t/subhamay-bhattacharyya-gha/setup-aws-environments-wf)&nbsp;![Last Commit](https://img.shields.io/github/last-commit/subhamay-bhattacharyya-gha/setup-aws-environments-wf)&nbsp;![Release Date](https://img.shields.io/github/release-date/subhamay-bhattacharyya-gha/setup-aws-environments-wf)&nbsp;![Repo Size](https://img.shields.io/github/repo-size/subhamay-bhattacharyya-gha/setup-aws-environments-wf)&nbsp;![File Count](https://img.shields.io/github/directory-file-count/subhamay-bhattacharyya-gha/setup-aws-environments-wf)&nbsp;![Open Issues](https://img.shields.io/github/issues/subhamay-bhattacharyya-gha/setup-aws-environments-wf)&nbsp;![Top Language](https://img.shields.io/github/languages/top/subhamay-bhattacharyya-gha/setup-aws-environments-wf)&nbsp;![Monthly Commit Activity](https://img.shields.io/github/commit-activity/m/subhamay-bhattacharyya-gha/setup-aws-environments-wf)&nbsp;![Custom Endpoint](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bsubhamay/d581133d043d5125e0b78bf39eb55380/raw/setup-aws-environments-wf.json?)
 
-A Template GitHub Repository to be used to create a composite action.
+## 📝 About the Reusable Workflow
 
-## Action Name
+This reusable GitHub Action sets up CI, development, test, and production environments by creating GitHub environments with required secrets and variables.
 
-### Action Description
+## 🛠️ Usage
 
-This GitHub Action provides a reusable composite workflow that sets up Python and interacts with the GitHub API to post a comment on an issue, including a link to a created branch.
+Call this workflow from another workflow using `workflow_call`. Example:
 
 ---
+
+## 🚀 Example: Using This Reusable Workflow
+
+To invoke this workflow from another workflow in the same or external repo:
+
+```yaml
+name: Setup Environments
+run-name: Setup Environments in ${{ github.ref_name }} by ${{ github.actor }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      ci-environment:
+        description: "AWS Account Name for CI Environment."
+        required: true
+        default: "devl-ou-a"
+      devl-environment:
+        description: "AWS Account Name for Development Environment."
+        required: true
+        default: "devl-ou-a"
+      test-environment:
+        description: "AWS Account Name for Test Environment."
+        required: true
+        default: "test-ou-a"
+      prod-environment:
+        description: "AWS Account Name for Production Environment."
+        required: true
+        default: "prod-ou-a"
+      aws-region:
+        description: "AWS region where the services will be deployed."
+        required: true
+        default: "us-east-1"
+
+jobs:
+  setup:
+    name: Setup
+    uses: subhamay-bhattacharyya-gha/setup-aws-environments-wf/.github/workflows/setup-environments.yaml@main
+    with:
+      ci-environment: ${{ github.event.inputs.ci-environment }}
+      devl-environment: ${{ github.event.inputs.devl-environment }}
+      test-environment: ${{ github.event.inputs.test-environment }}
+      prod-environment: ${{ github.event.inputs.prod-environment }}
+      aws-region: ${{ github.event.inputs.aws-region }}
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}
+
+```
 
 ## Inputs
 
-| Name           | Description         | Required | Default        |
-|----------------|---------------------|----------|----------------|
-| `input-1`      | Input description.  | No       | `default-value`|
-| `input-2`      | Input description.  | No       | `default-value`|
-| `input-3`      | Input description.  | No       | `default-value`|
-| `github-token` | GitHub token. Used for API authentication. | Yes | — |
+| Name               | Description                                        | Required |
+|--------------------|----------------------------------------------------|----------|
+| `ci-environment`   | AWS Account Name for CI environment                | ✅       |
+| `devl-environment` | AWS Account Name for Development environment       | ✅       |
+| `test-environment` | AWS Account Name for Test environment              | ✅       |
+| `prod-environment` | AWS Account Name for Production environment        | ✅       |
+| `aws-region`       | AWS region where services will be deployed         | ✅       |
+
+## Secrets
+
+| Name     | Description                                      | Required |
+|----------|--------------------------------------------------|----------|
+| `GH_PAT` | GitHub Personal Access Token with `repo` `workflow` and `admin:repo_hook` scopes   | ✅       |
+
+## Permissions Required
+
+This workflow requires the following permissions:
+
+```yaml
+permissions:
+  contents: write
+  id-token: write
+  actions: write
+  deployments: write
+```
+
+## What It Does
+
+- Checks out the repository
+- Installs `gh` CLI and `jq`
+- For each environment (`ci`, `devl`, `test`, `prod`):
+  - Retrieves AWS account ID from the `AWS_ACCOUNTS` repository variable (must be a JSON object)
+  - Creates the environment if it doesn’t exist
+  - Sets a secret `AWS_ROLE_ARN` with the OIDC role ARN
+  - Sets a variable `AWS_REGION` with the target region
+
+## Requirements
+
+Make sure your repository has the following variables defined:
+
+- `AWS_ACCOUNTS`: JSON map of environment account names to AWS Account IDs. Example:
+
+  ```json
+  {
+    "ci-account-name": "111122223333",
+    "devl-account-name": "444455556666",
+    "test-account-name": "777788889999",
+    "prod-account-name": "000011112222"
+  }
+  ```
+
+- `AWS_OIDC_ROLE`: Name of the IAM role to assume via OIDC in each AWS account
 
 ---
 
-## Example Usage
-
-```yaml
-name: Example Workflow
-
-on:
-  issues:
-    types: [opened]
-
-jobs:
-  example:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run Custom Action
-        uses: your-org/your-action-repo@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          input-1: your-value
-          input-2: another-value
-          input-3: something-else
-```
-
 ## License
 
-MIT
+ MIT
