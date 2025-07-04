@@ -59,6 +59,7 @@ jobs:
           TF_STATE_BUCKET_BASE_NAME: ${{ vars.TF_STATE_BUCKET_BASE_NAME }}
           S3_KMS_KEY_ALIAS: ${{ vars.S3_KMS_KEY_ALIAS }}
           AWS_REGION: ${{ inputs.aws-region }}  # added for simpler reuse
+          ORG_SHORT_NAME: ${{ vars.ORG_SHORT_NAME }}
         run: |
           set -euo pipefail
 
@@ -87,7 +88,7 @@ jobs:
             if [ "${env}" == "ci" ]; then
               gh_env_name="$env"
             else
-              gh_env_name="$env-${AWS_REGION}"
+              gh_env_name="${ORG_SHORT_NAME}-$env-${AWS_REGION}"
             fi
 
             gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$gh_env_name"
