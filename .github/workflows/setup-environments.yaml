@@ -41,8 +41,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      ## Git checkout is needed here for the workflow to run in the context of the repository.
+      ## This is required to ensure that the workflow has access to the repository context.
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Create environments with secrets and variables
+        working-directory: ${{ github.workspace }}
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           CI_ACCOUNT: ${{ inputs.ci-environment }}
