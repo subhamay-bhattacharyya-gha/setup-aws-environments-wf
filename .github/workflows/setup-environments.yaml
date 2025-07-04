@@ -53,9 +53,12 @@ jobs:
           PROD_ACCOUNT: ${{ inputs.prod-environment }}
           AWS_ACCOUNTS: ${{ vars.AWS_ACCOUNTS }}
           AWS_OIDC_ROLE: ${{ vars.AWS_OIDC_ROLE }}
-          CODE_REPO_S3_BUCKET_BASE_NAME: ${{ vars.CODE_REPO_S3_BUCKET_BASE_NAME }}
+          TF_STATE_BUCKET_BASE_NAME: ${{ vars.TF_STATE_BUCKET_BASE_NAME }}
           S3_KMS_KEY_ALIAS: ${{ vars.S3_KMS_KEY_ALIAS }}
+          AWS_REGION: ${{ inputs.aws-region }}  # added for simpler reuse
         run: |
+          set -euo pipefail
+
           declare -A ENV_ACCOUNT_MAP=(
             [ci]="$CI_ACCOUNT"
             [devl]="$DEVL_ACCOUNT"
@@ -64,40 +67,49 @@ jobs:
           )
 
           declare -A ENV_NAME_MAP=(
-            [ci]="devl"
-            [devl]="devl"
-            [test]="test"
-            [prod]="prod"
+            [ci]="devl-${AWS_REGION}"
+            [devl]="devl-${AWS_REGION}"
+            [test]="test-${AWS_REGION}"
+            [prod]="prod-${AWS_REGION}"
           )
 
+          echo "::group::Creating environments and setting secrets/variables"
           for env in "${!ENV_ACCOUNT_MAP[@]}"; do
             echo "::group::Processing environment: $env"
             account_name="${ENV_ACCOUNT_MAP[$env]}"
             account_id=$(echo "$AWS_ACCOUNTS" | jq -r --arg name "$account_name" '.[$name]')
             env_name="${ENV_NAME_MAP[$env]}"
 
-            echo "Creating environment: $env"
-            gh api --method PUT repos/${{ github.repository }}/environments/$env
+            # Create environment (idempotent)
+            gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$env"
 
             echo "Adding secret 'AWS Role Arn' to $env"
             gh secret set AWS_ROLE_ARN \
               --env "$env" \
               --body "arn:aws:iam::${account_id}:role/${AWS_OIDC_ROLE}"
 
-            echo "Adding variable 'AWS Region' to $env"
+            echo "Adding secret 'Terraform State S3 Bucket' to $env"
+            gh secret set TF_STATE_BUCKET_NAME \
+              --env "$env" \
+              --body "${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_name}-${AWS_REGION}"
+            echo "::endgroup::"
+
+            echo "::group::Creating environment variables: $env"
             gh variable set AWS_REGION \
               --env "$env" \
-              --body "${{ inputs.aws-region }}"
+              --body "${AWS_REGION}"
 
-            echo "Adding variable 'S3 Kms Key Alias' to $env"
             gh variable set S3_KMS_KEY_ALIAS \
               --env "$env" \
               --body "alias/${S3_KMS_KEY_ALIAS}"
 
-            echo "Adding secret 'Code Repository S3 Bucket' to $env"
-            gh secret set CODE_REPO_S3_BUCKET \
+            gh variable set TF_STATE_BUCKET_NAME \
               --env "$env" \
-              --body "${CODE_REPO_S3_BUCKET_BASE_NAME}-${account_id}-${env_name}-${{ inputs.aws-region }}"
+              --body "${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_name}-${AWS_REGION}"
 
+            gh variable set AWS_ROLE_ARN \
+              --env "$env" \
+              --body "arn:aws:iam::${account_id}:role/${AWS_OIDC_ROLE}"
             echo "::endgroup::"
           done
+          echo "::endgroup::"
