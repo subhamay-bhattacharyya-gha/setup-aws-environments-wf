@@ -85,41 +85,42 @@ jobs:
 
             # Create environment (idempotent)
             if [ "${env}" == "ci" ]; then
-              gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$env"
+              gh_env_name="$env"
             else
-              gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$env-${AWS_REGION}"
+              gh_env_name="$env-${AWS_REGION}"
             fi
 
+            gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$gh_env_name"
             ############## Add secrets to the environment    --- Start
-            echo "::group::Adding secrets to environment: $env"
-            echo "Adding secret 'AWS Role Arn' to $env"
+            echo "::group::Adding secrets to environment: $gh_env_name"
+            echo "Adding secret 'AWS Role Arn' to $gh_env_name"
             gh secret set AWS_ROLE_ARN \
-              --env "$env" \
+              --env "$gh_env_name" \
               --body "arn:aws:iam::${account_id}:role/${AWS_OIDC_ROLE}"
 
-            echo "Adding secret 'Terraform State S3 Bucket' to $env"
+            echo "Adding secret 'Terraform State S3 Bucket' to $gh_env_name"
             gh secret set TF_STATE_BUCKET_NAME \
-              --env "$env" \
+              --env "$gh_env_name" \
               --body "${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_name}"
             echo "::endgroup::"
             ############## Add secrets to the environment      -- End
 
             ############## Add variables to the environment    --- Start
-            echo "::group::Adding variables to environment: $env"
+            echo "::group::Adding variables to environment: $gh_env_name"
             gh variable set AWS_REGION \
-              --env "$env" \
+              --env "$gh_env_name" \
               --body "${AWS_REGION}"
 
             gh variable set S3_KMS_KEY_ALIAS \
-              --env "$env" \
+              --env "$gh_env_name" \
               --body "alias/${S3_KMS_KEY_ALIAS}"
 
             gh variable set TF_STATE_BUCKET_NAME \
-              --env "$env" \
+              --env "$gh_env_name" \
               --body "${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_name}"
 
             gh variable set AWS_ROLE_ARN \
-              --env "$env" \
+              --env "$gh_env_name" \
               --body "arn:aws:iam::${account_id}:role/${AWS_OIDC_ROLE}"
             echo "::endgroup::"
             ############## Add variables to the environment   --- End
