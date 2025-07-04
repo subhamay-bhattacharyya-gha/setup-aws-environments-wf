@@ -71,10 +71,10 @@ jobs:
           )
 
           declare -A ENV_NAME_MAP=(
-            [ci]="devl-${AWS_REGION}"
-            [devl]="devl-${AWS_REGION}"
-            [test]="test-${AWS_REGION}"
-            [prod]="prod-${AWS_REGION}"
+            [ci]="devl"
+            [devl]="devl"
+            [test]="test"
+            [prod]="prod"
           )
 
           echo "::group::Creating environments and setting secrets and variables"
