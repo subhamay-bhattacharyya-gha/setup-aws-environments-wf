@@ -84,7 +84,11 @@ jobs:
             env_name="${ENV_NAME_MAP[$env]}"
 
             # Create environment (idempotent)
-            gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$env"
+            if [ "${env}" == "ci" ]; then
+              gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$env"
+            else
+              gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$env-${AWS_REGION}"
+            fi
 
             ############## Add secrets to the environment    --- Start
             echo "::group::Adding secrets to environment: $env"
