@@ -54,7 +54,7 @@ jobs:
 
           echo "::group::Parsing CODEOWNERS and adding collaborators"
           echo "============CODEOWNERS================"
-          cat CODEOWNERS || echo "CODEOWNERS file not found, skipping collaborator addition."
+          cat CODEOWNERS || echo "CODEOWNERS file not found, skipping collaborator addition.\n"
           echo "===================================="
 
           # Extract GitHub usernames and teams from CODEOWNERS
@@ -73,6 +73,23 @@ jobs:
             elif [[ "$owner" =~ ^@([^/]+)/([^/]+)$ ]]; then
               echo "⚠️ Skipping team reference $owner — not valid in personal repos or cannot be added via API"
             fi
+
+
+            if [[ "$owner" =~ ^@([a-zA-Z0-9._-]+)$ ]]; then
+              username="${BASH_REMATCH[1]}"
+              echo "Adding user: $username"
+              gh api --method PUT "/repos/${GITHUB_REPOSITORY}/collaborators/$username" \
+                -f permission='push' || echo "Failed to add $username — skipping."
+            elif [[ "$owner" =~ ^@([a-zA-Z0-9._-]+)/([a-zA-Z0-9._-]+)$ ]]; then
+              org="${BASH_REMATCH[1]}"
+              team="${BASH_REMATCH[2]}"
+              echo "Detected team: @${org}/${team}"
+              gh api --method PUT "/repos/${GITHUB_REPOSITORY}/collaborators/$team" \
+                -f permission='push' || echo "Failed to add $team — skipping."
+            else
+              echo "❌ Invalid CODEOWNERS entry: $owner"
+            fi
+
           done
 
           echo "::endgroup::"
