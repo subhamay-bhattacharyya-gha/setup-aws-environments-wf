@@ -53,9 +53,12 @@ jobs:
           set -euo pipefail
 
           echo "::group::Parsing CODEOWNERS and adding collaborators"
+          cat CODEOWNERS || echo "CODEOWNERS file not found, skipping collaborator addition."
 
           # Extract GitHub usernames and teams from CODEOWNERS
           owners=$(grep -v '^#' CODEOWNERS | awk '{$1=""; print $0}' | tr -s ' ' '\n' | grep '^@' | sort -u)
+
+          echo "Found owners: $owners"
 
           for owner in $owners; do
             # Extract user or team name
