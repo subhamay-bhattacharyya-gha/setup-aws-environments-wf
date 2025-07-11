@@ -41,10 +41,61 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      ## Git checkout is needed here for the workflow to run in the context of the repository.
+      ## This is required to ensure that the workflow has access to the repository context.
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Add CODEOWNERS as collaborators
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+
+          echo "::group::Parsing CODEOWNERS and adding collaborators"
+
+          # Extract GitHub usernames and teams from CODEOWNERS
+          owners=$(grep -v '^#' CODEOWNERS | awk '{$1=""; print $0}' | tr -s ' ' '\n' | grep '^@' | sort -u)
+
+          for owner in $owners; do
+            echo "Processing owner: $owner"
+
+            if [[ "$owner" =~ ^@([a-zA-Z0-9._-]+)$ ]]; then
+              username="${BASH_REMATCH[1]}"
+              echo "Adding user: $username"
+              gh api --method PUT "/repos/${GITHUB_REPOSITORY}/collaborators/$username" \
+                -f permission='push' || echo "Failed to add $username — skipping."
+            elif [[ "$owner" =~ ^@([a-zA-Z0-9._-]+)/([a-zA-Z0-9._-]+)$ ]]; then
+              org="${BASH_REMATCH[1]}"
+              team="${BASH_REMATCH[2]}"
+              echo "Detected team: @${org}/${team}"
+              gh api --method PUT "/orgs/${org}/teams/${team}/repos/${GITHUB_REPOSITORY}" \
+                -f permission="push"
+            else
+              echo "❌ Invalid CODEOWNERS entry: $owner"
+            fi
+          done
+
+          echo "::endgroup::"
+
+      - name: Delete all environments
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+
+          echo "::group::Fetching environments"
+          environments=$(gh api "/repos/${GITHUB_REPOSITORY}/environments" --jq '.environments[].name')
+          echo "::endgroup::"
+
+          for env in $environments; do
+            echo "::group::Deleting environment: $env"
+            gh api --method DELETE "/repos/${GITHUB_REPOSITORY}/environments/$env"
+            echo "::endgroup::"
+          done
+
       - name: Create environments with secrets and variables
+        working-directory: ${{ github.workspace }}
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           CI_ACCOUNT: ${{ inputs.ci-environment }}
@@ -53,9 +104,13 @@ jobs:
           PROD_ACCOUNT: ${{ inputs.prod-environment }}
           AWS_ACCOUNTS: ${{ vars.AWS_ACCOUNTS }}
           AWS_OIDC_ROLE: ${{ vars.AWS_OIDC_ROLE }}
-          CODE_REPO_S3_BUCKET_BASE_NAME: ${{ vars.CODE_REPO_S3_BUCKET_BASE_NAME }}
+          TF_STATE_BUCKET_BASE_NAME: ${{ vars.TF_STATE_BUCKET_BASE_NAME }}
           S3_KMS_KEY_ALIAS: ${{ vars.S3_KMS_KEY_ALIAS }}
+          AWS_REGION: ${{ inputs.aws-region }}  # added for simpler reuse
+          ORG_SHORT_NAME: ${{ vars.ORG_SHORT_NAME }}
         run: |
+          set -euo pipefail
+
           declare -A ENV_ACCOUNT_MAP=(
             [ci]="$CI_ACCOUNT"
             [devl]="$DEVL_ACCOUNT"
@@ -70,34 +125,54 @@ jobs:
             [prod]="prod"
           )
 
+          echo "::group::Creating environments and setting secrets and variables"
           for env in "${!ENV_ACCOUNT_MAP[@]}"; do
             echo "::group::Processing environment: $env"
             account_name="${ENV_ACCOUNT_MAP[$env]}"
             account_id=$(echo "$AWS_ACCOUNTS" | jq -r --arg name "$account_name" '.[$name]')
             env_name="${ENV_NAME_MAP[$env]}"
 
-            echo "Creating environment: $env"
-            gh api --method PUT repos/${{ github.repository }}/environments/$env
+            # Create environment (idempotent)
+            if [ "${env}" == "ci" ]; then
+              gh_env_name="$env"
+            else
+              gh_env_name="${ORG_SHORT_NAME}-$env-${AWS_REGION}"
+            fi
 
-            echo "Adding secret 'AWS Role Arn' to $env"
+            gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$gh_env_name"
+            ############## Add secrets to the environment    --- Start
+            echo "::group::Adding secrets to environment: $gh_env_name"
+            echo "Adding secret 'AWS Role Arn' to $gh_env_name"
             gh secret set AWS_ROLE_ARN \
-              --env "$env" \
+              --env "$gh_env_name" \
               --body "arn:aws:iam::${account_id}:role/${AWS_OIDC_ROLE}"
 
-            echo "Adding variable 'AWS Region' to $env"
-            gh variable set AWS_REGION \
-              --env "$env" \
-              --body "${{ inputs.aws-region }}"
+            echo "Adding secret 'Terraform State S3 Bucket' to $gh_env_name"
+            gh secret set TF_STATE_BUCKET_NAME \
+              --env "$gh_env_name" \
+              --body "${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_name}-${AWS_REGION}"
+            echo "::endgroup::"
+            ############## Add secrets to the environment      -- End
 
-            echo "Adding variable 'S3 Kms Key Alias' to $env"
+            ############## Add variables to the environment    --- Start
+            echo "::group::Adding variables to environment: $gh_env_name"
+            gh variable set AWS_REGION \
+              --env "$gh_env_name" \
+              --body "${AWS_REGION}"
+
             gh variable set S3_KMS_KEY_ALIAS \
-              --env "$env" \
+              --env "$gh_env_name" \
               --body "alias/${S3_KMS_KEY_ALIAS}"
 
-            echo "Adding secret 'Code Repository S3 Bucket' to $env"
-            gh secret set CODE_REPO_S3_BUCKET \
-              --env "$env" \
-              --body "${CODE_REPO_S3_BUCKET_BASE_NAME}-${account_id}-${env_name}-${{ inputs.aws-region }}"
+            gh variable set TF_STATE_BUCKET_NAME \
+              --env "$gh_env_name" \
+              --body "${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_name}-${AWS_REGION}"
 
+            gh variable set AWS_ROLE_ARN \
+              --env "$gh_env_name" \
+              --body "arn:aws:iam::${account_id}:role/${AWS_OIDC_ROLE}"
+            echo "::endgroup::"
+            ############## Add variables to the environment   --- End
             echo "::endgroup::"
           done
+          echo "::endgroup::"
