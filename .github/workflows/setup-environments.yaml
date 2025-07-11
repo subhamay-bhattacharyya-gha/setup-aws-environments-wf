@@ -46,6 +46,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Add CODEOWNERS as collaborators
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+
+          echo "::group::Parsing CODEOWNERS and adding collaborators"
+
+          # Extract GitHub usernames and teams from CODEOWNERS
+          owners=$(grep -v '^#' CODEOWNERS | awk '{$1=""; print $0}' | tr -s ' ' '\n' | grep '^@' | sort -u)
+
+          for owner in $owners; do
+            # Extract user or team name
+            if [[ "$owner" =~ ^@([^/]+)$ ]]; then
+              username="${BASH_REMATCH[1]}"
+              echo "Adding user: $username"
+              gh api --method PUT "/repos/${GITHUB_REPOSITORY}/collaborators/$username" \
+                -f permission='push' || echo "Failed to add $username — skipping."
+            elif [[ "$owner" =~ ^@([^/]+)/([^/]+)$ ]]; then
+              echo "⚠️ Skipping team reference $owner — not valid in personal repos or cannot be added via API"
+            fi
+          done
+
+          echo "::endgroup::"
+
       - name: Create environments with secrets and variables
         working-directory: ${{ github.workspace }}
         env:
