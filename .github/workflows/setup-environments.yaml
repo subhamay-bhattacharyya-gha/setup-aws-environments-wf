@@ -102,7 +102,7 @@ jobs:
             echo "Adding secret 'Terraform State S3 Bucket' to $gh_env_name"
             gh secret set TF_STATE_BUCKET_NAME \
               --env "$gh_env_name" \
-              --body "${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_name}"
+              --body "${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_name}-${AWS_REGION}"
             echo "::endgroup::"
             ############## Add secrets to the environment      -- End
 
@@ -118,7 +118,7 @@ jobs:
 
             gh variable set TF_STATE_BUCKET_NAME \
               --env "$gh_env_name" \
-              --body "${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_name}"
+              --body "${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_name}-${AWS_REGION}"
 
             gh variable set AWS_ROLE_ARN \
               --env "$gh_env_name" \
