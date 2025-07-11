@@ -64,15 +64,17 @@ jobs:
 
           for owner in $owners; do
             echo "Processing owner: $owner"
-            # Extract user or team name
-            if [[ "$owner" =~ ^@([^/]+)$ ]]; then
-              username="${BASH_REMATCH[1]}"
-              echo "Adding user: $username"
-              gh api --method PUT "/repos/${GITHUB_REPOSITORY}/collaborators/$username" \
-                -f permission='push' || echo "Failed to add $username — skipping."
-            elif [[ "$owner" =~ ^@([^/]+)/([^/]+)$ ]]; then
-              echo "⚠️ Skipping team reference $owner — not valid in personal repos or cannot be added via API"
-            fi
+            # # Extract user or team name
+            # if [[ "$owner" =~ ^@([^/]+)$ ]]; then
+            #   username="${BASH_REMATCH[1]}"
+            #   echo "Adding user: $username"
+
+
+            #   gh api --method PUT "/repos/${GITHUB_REPOSITORY}/collaborators/$username" \
+            #     -f permission='push' || echo "Failed to add $username — skipping."
+            # elif [[ "$owner" =~ ^@([^/]+)/([^/]+)$ ]]; then
+            #   echo "⚠️ Skipping team reference $owner — not valid in personal repos or cannot be added via API"
+            # fi
 
 
             if [[ "$owner" =~ ^@([a-zA-Z0-9._-]+)$ ]]; then
@@ -84,8 +86,11 @@ jobs:
               org="${BASH_REMATCH[1]}"
               team="${BASH_REMATCH[2]}"
               echo "Detected team: @${org}/${team}"
-              gh api --method PUT "/repos/${GITHUB_REPOSITORY}/collaborators/$team" \
-                -f permission='push' || echo "Failed to add $team — skipping."
+              gh api --method PUT "/orgs/${org}/teams/${team}/repos/${GITHUB_REPOSITORY}" \
+                -f permission="push"
+
+              # gh api --method PUT "/repos/${GITHUB_REPOSITORY}/collaborators/$team" \
+              #   -f permission='push' || echo "Failed to add $team — skipping."
             else
               echo "❌ Invalid CODEOWNERS entry: $owner"
             fi
