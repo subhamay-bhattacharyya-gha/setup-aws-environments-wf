@@ -44,7 +44,7 @@ jobs:
       ## Git checkout is needed here for the workflow to run in the context of the repository.
       ## This is required to ensure that the workflow has access to the repository context.
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Add CODEOWNERS as collaborators
         env:
