@@ -1,0 +1,8 @@
+---
+environments:
+  ci: AWS-SCS-C03-DEVL
+  devl: AWS-SCS-C03-DEVL
+  test: AWS-SCS-C03-TEST
+  prod: AWS-SCS-C03-PROD
+regions:
+  - us-east-1
