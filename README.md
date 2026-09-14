@@ -21,12 +21,6 @@ name: Setup AWS Environments
 run-name: Setup AWS Environments in ${{ github.ref_name }}
 
 on:
-  push:
-    paths:
-      - '.env/environments.yaml'
-      - '.github/workflows/setup-environments.yaml'
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
