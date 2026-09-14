@@ -79,7 +79,7 @@ jobs:
 
           # Read environments from YAML
           environments=$(yq eval '.environments | keys | join(",")' .env/environments.yaml)
-          regions=$(yq eval '.regions | join(",")' .env/environments.yaml)
+          regions=$(yq eval '.regions | join(" ")' .env/environments.yaml)
 
           if [ -z "$regions" ]; then
             regions="us-east-1"
