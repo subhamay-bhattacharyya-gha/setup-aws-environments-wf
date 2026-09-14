@@ -58,6 +58,32 @@ regions:
 - `devl`, `test`, `prod` are optional
 - Specify one or more AWS regions (defaults to `us-east-1` if omitted)
 
+### Examples
+
+**Minimal Configuration (CI + Development):**
+
+```yaml
+environments:
+  ci: AWS-SCS-C03-DEVL
+  devl: AWS-SCS-C03-DEVL
+regions:
+  - us-east-1
+```
+
+**Complete Configuration (All Environments):**
+
+```yaml
+environments:
+  ci: AWS-SCS-C03-DEVL
+  devl: AWS-SCS-C03-DEVL
+  test: AWS-SCS-C03-TEST
+  prod: AWS-SCS-C03-PROD
+regions:
+  - us-east-1
+  - us-west-2
+  - eu-west-1
+```
+
 ### Key Points
 
 1. **Configuration as Code**: Store environment configuration in `.env/environments.yaml`
