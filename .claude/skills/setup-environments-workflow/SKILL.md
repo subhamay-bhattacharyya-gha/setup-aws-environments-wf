@@ -332,7 +332,7 @@ For validation purposes, the configuration file must conform to the following sc
 
 ### How Environments Are Created
 
-Each account alias must correspond to a key in the `AWS_ACCOUNTS` organization variable.
+Each account alias must correspond to a key in the `AWS_ACCOUNT_ID_MAP` organization variable.
 
 - **CI Environment**: Single environment named `ci` (not replicated across regions)
 - **Regional Environments** (devl, test, prod): One environment per region, named as `{environment}-{account-alias}-{region}`
@@ -382,7 +382,7 @@ regions:
 
 The calling repository can access these organization-level variables:
 
-### AWS_ACCOUNTS (Required)
+### AWS_ACCOUNT_ID_MAP (Required)
 
 JSON object mapping account aliases → account IDs. Can contain any number of entries:
 
@@ -403,6 +403,7 @@ The following variables are read from organization variables. If not defined, th
 
 | Variable | Default Value | Description |
 | --- | --- | --- |
+| `AWS_ACCOUNT_ID_MAP` | ```{"ci-account-name": "111122223333", "devl-account-name": "444455556666", "test-account-name": "777788889999", "prod-account-name": "000011112222"} ``` | JSON object mapping account aliases → account IDs |
 | `AWS_OIDC_ROLE` | `GitHubActionsOIDCRole` | Name of IAM role to assume via OIDC |
 | `AWS_REGION` | `us-east-1` | Default AWS region |
 | `TF_STATE_BUCKET_BASE_NAME` | `terraform-state-bucket` | Base name for Terraform state S3 buckets |
@@ -527,7 +528,7 @@ npm run release  # Requires GITHUB_TOKEN in environment
 
 ### Setup Environments Workflow Fails
 
-- Verify all required organization variables are set (AWS_ACCOUNTS, AWS_OIDC_ROLE, etc.)
+- Verify all required organization variables are set (AWS_ACCOUNT_ID_MAP, AWS_OIDC_ROLE, etc.)
 - Check that the GH_PAT secret has required scopes
 - Ensure the workflow has necessary permissions in the calling repository
 
