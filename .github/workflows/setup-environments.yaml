@@ -171,11 +171,10 @@ jobs:
           gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/ci"
 
           gh secret set AWS_ROLE_ARN --env "ci" --body "arn:aws:iam::${ci_account_id}:role/${AWS_OIDC_ROLE}"
-          gh secret set TF_STATE_BUCKET_NAME --env "ci" --body "${TF_STATE_BUCKET_BASE_NAME}-${ci_account_id}-ci-${regions_array[0]}"
 
           gh variable set AWS_REGION --env "ci" --body "${regions_array[0]}"
           gh variable set S3_KMS_KEY_ALIAS --env "ci" --body "alias/${S3_KMS_KEY_ALIAS}"
-          gh variable set TF_STATE_BUCKET_NAME --env "ci" --body "${TF_STATE_BUCKET_BASE_NAME}-${ci_account_id}-ci-${regions_array[0]}"
+          gh variable set TF_STATE_BUCKET_ARN --env "ci" --body "arn:aws:s3:::${TF_STATE_BUCKET_BASE_NAME}-${ci_account_id}-ci-${regions_array[0]}"
           gh variable set AWS_ROLE_ARN --env "ci" --body "arn:aws:iam::${ci_account_id}:role/${AWS_OIDC_ROLE}"
 
           # Process other environments (regional)
@@ -194,11 +193,10 @@ jobs:
               gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$env_name"
 
               gh secret set AWS_ROLE_ARN --env "$env_name" --body "arn:aws:iam::${account_id}:role/${AWS_OIDC_ROLE}"
-              gh secret set TF_STATE_BUCKET_NAME --env "$env_name" --body "${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_type}-${region}"
 
               gh variable set AWS_REGION --env "$env_name" --body "$region"
               gh variable set S3_KMS_KEY_ALIAS --env "$env_name" --body "alias/${S3_KMS_KEY_ALIAS}"
-              gh variable set TF_STATE_BUCKET_NAME --env "$env_name" --body "${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_type}-${region}"
+              gh variable set TF_STATE_BUCKET_ARN --env "$env_name" --body "arn:aws:s3:::${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_type}-${region}"
               gh variable set AWS_ROLE_ARN --env "$env_name" --body "arn:aws:iam::${account_id}:role/${AWS_OIDC_ROLE}"
             done
           done

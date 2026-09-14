@@ -116,11 +116,10 @@ permissions:
    - **Other environments** (devl, test, prod): Regional environments in format `{type}-{account}-{region}`
 6. **Sets secrets** in each environment:
    - `AWS_ROLE_ARN`: OIDC role ARN for AWS authentication
-   - `TF_STATE_BUCKET_NAME`: Terraform state bucket name
 7. **Sets variables** in each environment:
    - `AWS_REGION`: Target AWS region
    - `S3_KMS_KEY_ALIAS`: KMS key for S3 encryption
-   - `TF_STATE_BUCKET_NAME`: Terraform state bucket name
+   - `TF_STATE_BUCKET_ARN`: S3 bucket ARN for Terraform state
    - `AWS_ROLE_ARN`: OIDC role ARN
 8. **Sets up branch protection** rules for `feature/*` and `bug/*` branches
 9. **Sets up main branch protection** with required deployments to `ci` and `devl`
