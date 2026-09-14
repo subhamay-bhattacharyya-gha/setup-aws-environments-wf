@@ -1,3 +1,29 @@
+# [1.2.0](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.1.0...v1.2.0) (2026-09-14)
+
+
+### Bug Fixes
+
+* correct pull_request rule parameter for GitHub rulesets ([cee98e6](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/cee98e63cfcf8b13f34d057948d1c5e3e8a8050b))
+* correct region extraction in step summary output ([67be70b](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/67be70b0c1923e8a5645ccf38573d15564dca0b7))
+* delete existing rulesets before creating new branch protection rules ([b9ff528](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/b9ff52852f4999285af8cd756b1359ccad89bf51))
+* parse regions as space-separated values for array expansion ([e7d04b8](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/e7d04b88686085093acd7a894acd76e36b48b5c1))
+* remove pull_request rule from feature/bug branch protection ruleset ([17e7c06](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/17e7c06194c052fbf114c6aafb35e595c8479fd9))
+* remove pull_request rule from main branch protection ruleset ([c96b920](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/c96b92036285d2d0eb7fb5cd668729d9fde1b5d9))
+* remove push trigger for main branch in workflow ([9abe9b5](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/9abe9b5cbaec84c20a6f42bd9dd444293c364553))
+* simplify pull_request rule parameters in branch protection rulesets ([44ed7af](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/44ed7af0aafca11d622622cb175167a2dc29f037))
+* update variable names from AWS_ACCOUNTS to AWS_ACCOUNT_ID_MAP in workflow and documentation ([f441fd6](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/f441fd61b057753131c5c6eed92713684e8ded41))
+
+
+### Features
+
+* add AWS_ENVIRONMENT variable to all environments ([1b8d100](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/1b8d1008c0fb2f3c3fd4513ed301109093ae5417))
+* add GitHub step summary output for environments and branch protection rules ([02c13e0](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/02c13e01279823a1fdfefcddf5683e4387abf9a6))
+* add setup guide and conventions for CLAUDE and update environment workflow validation ([54bc898](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/54bc898855fff8889a58f07174c3e628ef068ffa))
+* enhance workflow configuration by adding environment parsing and automation ([8bbf1b4](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/8bbf1b452c477defc3091f5bd598f74214b72409))
+* make environment naming conditional based on region count ([e555a74](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/e555a74c60069387dbf19de75c0833a005b5555a))
+* refactor environment configuration parsing and update README for new structure ([1e94990](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/1e949906469d5f9a3010a332d873cb5b1622936a))
+* update README to include "Built with Claude Code" badge ([2032772](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/2032772622501836248cf46b950b0d74d13b6d78))
+
 # [1.1.0](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.0.0...v1.1.0) (2026-09-12)
 
 
