@@ -173,6 +173,7 @@ jobs:
           gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/ci"
           created_envs+=("ci")
 
+          gh variable set AWS_ENVIRONMENT --env "ci" --body "ci"
           gh variable set AWS_REGION --env "ci" --body "${regions_array[0]}"
           gh variable set S3_KMS_KEY_ALIAS --env "ci" --body "alias/${S3_KMS_KEY_ALIAS}"
           gh variable set TF_STATE_BUCKET_ARN --env "ci" --body "arn:aws:s3:::${TF_STATE_BUCKET_BASE_NAME}-${ci_account_id}-ci-${regions_array[0]}"
@@ -198,6 +199,7 @@ jobs:
               gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$env_name"
               created_envs+=("$env_name")
 
+              gh variable set AWS_ENVIRONMENT --env "$env_name" --body "$env_type"
               gh variable set AWS_REGION --env "$env_name" --body "$region"
               gh variable set S3_KMS_KEY_ALIAS --env "$env_name" --body "alias/${S3_KMS_KEY_ALIAS}"
               gh variable set TF_STATE_BUCKET_ARN --env "$env_name" --body "arn:aws:s3:::${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_type}-${region}"

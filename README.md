@@ -109,6 +109,7 @@ permissions:
    - **Single region**: `ci`, `devl`, `test`, `prod`
    - **Multiple regions**: `ci`, `devl-{region}`, `test-{region}`, `prod-{region}`
 6. **Sets variables** in each environment:
+   - `AWS_ENVIRONMENT`: Environment type (ci, devl, test, prod)
    - `AWS_REGION`: Target AWS region
    - `S3_KMS_KEY_ALIAS`: KMS key for S3 encryption
    - `TF_STATE_BUCKET_ARN`: S3 bucket ARN for Terraform state
