@@ -220,7 +220,7 @@ jobs:
               if [ "$env" == "ci" ]; then
                 echo "| \`$env\` | ${regions_array[0]} |"
               else
-                region=$(echo "$env" | rev | cut -d'-' -f1 | rev)
+                region=$(echo "$env" | cut -d'-' -f2-)
                 echo "| \`$env\` | $region |"
               fi
             done
