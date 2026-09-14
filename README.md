@@ -43,14 +43,13 @@ Create a `.env/environments.yaml` file in your repository with the following str
 
 ```yaml
 environments:
-  - ci: ci-account-alias
-  - devl: devl-account-alias
-  - test: test-account-alias
-  - prod: prod-account-alias
-
+  ci: AWS-SCS-C03-DEVL
+  devl: AWS-SCS-C03-DEVL
+  test: AWS-SCS-C03-TEST
+  prod: AWS-SCS-C03-PROD
 regions:
   - us-east-1
-  - us-west-2
+  - us-east-2
 ```
 
 **Environment Structure:**
