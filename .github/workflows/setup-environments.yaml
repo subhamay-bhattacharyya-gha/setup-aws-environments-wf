@@ -188,7 +188,7 @@ jobs:
             account_id=$(echo "$AWS_ACCOUNT_ID_MAP" | jq -r --arg name "$account" '.[$name]')
 
             for region in "${regions_array[@]}"; do
-              env_name="${env_type}-${account}-${region}"
+              env_name="${env_type}-${region}"
               echo "Creating environment: $env_name"
 
               gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$env_name"
