@@ -163,6 +163,7 @@ jobs:
 
           regions_array=(${{ steps.parse-config.outputs.regions }})
           num_regions=${#regions_array[@]}
+          created_envs=()
 
           # Process CI environment (non-regional)
           ci_account=$(yq eval '.environments.ci' .env/environments.yaml)
@@ -170,6 +171,7 @@ jobs:
 
           echo "Creating CI environment"
           gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/ci"
+          created_envs+=("ci")
 
           gh variable set AWS_REGION --env "ci" --body "${regions_array[0]}"
           gh variable set S3_KMS_KEY_ALIAS --env "ci" --body "alias/${S3_KMS_KEY_ALIAS}"
@@ -194,6 +196,7 @@ jobs:
               echo "Creating environment: $env_name"
 
               gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$env_name"
+              created_envs+=("$env_name")
 
               gh variable set AWS_REGION --env "$env_name" --body "$region"
               gh variable set S3_KMS_KEY_ALIAS --env "$env_name" --body "alias/${S3_KMS_KEY_ALIAS}"
@@ -202,7 +205,24 @@ jobs:
             done
           done
 
+          echo "✅ Created environments: ${created_envs[*]}"
           echo "::endgroup::"
+
+          # Output summary
+          {
+            echo "## 📋 Created Environments"
+            echo ""
+            echo "| Environment | AWS Region |"
+            echo "|---|---|"
+            for env in "${created_envs[@]}"; do
+              if [ "$env" == "ci" ]; then
+                echo "| \`$env\` | ${regions_array[0]} |"
+              else
+                region=$(echo "$env" | rev | cut -d'-' -f1 | rev)
+                echo "| \`$env\` | $region |"
+              fi
+            done
+          } >> $GITHUB_STEP_SUMMARY
 
   setup-branch-protection:
     name: Setup Branch Protection - Feature & Bug
@@ -259,6 +279,18 @@ jobs:
 
           echo "✅ Branch protection rules applied"
           echo "::endgroup::"
+
+          # Output summary
+          {
+            echo "## 🛡️ Branch Protection Rules - Feature & Bug"
+            echo ""
+            echo "| Rule Type | Details |"
+            echo "|---|---|"
+            echo "| Branch Pattern | \`feature/*\` and \`bug/*\` |"
+            echo "| Naming Pattern | \`^(feature\|bug)/[a-zA-Z0-9\\-_.]+$\` |"
+            echo "| Creation | Prevented |"
+            echo "| Fast-Forward Only | Enforced |"
+          } >> $GITHUB_STEP_SUMMARY
 
   setup-main-branch-protection:
     name: Setup Branch Protection - Main
@@ -320,3 +352,15 @@ jobs:
 
           echo "✅ Main branch protection rules applied"
           echo "::endgroup::"
+
+          # Output summary
+          {
+            echo "## 🛡️ Branch Protection Rules - Main"
+            echo ""
+            echo "| Rule Type | Details |"
+            echo "|---|---|"
+            echo "| Branch | \`main\` |"
+            echo "| Deletion | Prevented |"
+            echo "| Fast-Forward Only | Enforced |"
+            echo "| Required Deployments | \`ci\`, \`devl\` |"
+          } >> $GITHUB_STEP_SUMMARY
