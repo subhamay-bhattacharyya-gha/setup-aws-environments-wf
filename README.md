@@ -14,50 +14,191 @@ Call this workflow from another workflow using `workflow_call`. Example:
 
 ## 🚀 Example: Using This Reusable Workflow
 
-To invoke this workflow from another workflow in the same or external repo:
+To invoke this workflow from another workflow in the same or external repo, read configuration from `environments.yaml`:
 
 ```yaml
 name: Setup Environments
-run-name: Setup Environments in ${{ github.ref_name }} by ${{ github.actor }}
+run-name: Setup Environments in ${{ github.ref_name }}
 
 on:
+  push:
+    paths:
+      - 'environments.yaml'
+      - '.github/workflows/setup-environments.yaml'
+    branches:
+      - main
   workflow_dispatch:
-    inputs:
-      ci-environment:
-        description: "AWS Account Name for CI Environment."
-        required: true
-        default: "devl-ou-a"
-      devl-environment:
-        description: "AWS Account Name for Development Environment."
-        required: true
-        default: "devl-ou-a"
-      test-environment:
-        description: "AWS Account Name for Test Environment."
-        required: true
-        default: "test-ou-a"
-      prod-environment:
-        description: "AWS Account Name for Production Environment."
-        required: true
-        default: "prod-ou-a"
-      aws-region:
-        description: "AWS region where the services will be deployed."
-        required: true
-        default: "us-east-1"
+
+permissions:
+  contents: read
+  id-token: write
+  actions: write
+  deployments: write
 
 jobs:
+  parse-config:
+    name: Parse Configuration
+    runs-on: ubuntu-latest
+    outputs:
+      ci-environment: ${{ steps.config.outputs.ci-environment }}
+      devl-environment: ${{ steps.config.outputs.devl-environment }}
+      test-environment: ${{ steps.config.outputs.test-environment }}
+      prod-environment: ${{ steps.config.outputs.prod-environment }}
+      aws-region: ${{ steps.config.outputs.aws-region }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read environments.yaml
+        id: config
+        run: |
+          ci_env=$(yq -r '.ci.account_name' environments.yaml)
+          devl_env=$(yq -r '.devl.account_name' environments.yaml)
+          test_env=$(yq -r '.test.account_name' environments.yaml)
+          prod_env=$(yq -r '.prod.account_name' environments.yaml)
+          region=$(yq -r '.aws_region' environments.yaml)
+          
+          echo "ci-environment=$ci_env" >> $GITHUB_OUTPUT
+          echo "devl-environment=$devl_env" >> $GITHUB_OUTPUT
+          echo "test-environment=$test_env" >> $GITHUB_OUTPUT
+          echo "prod-environment=$prod_env" >> $GITHUB_OUTPUT
+          echo "aws-region=$region" >> $GITHUB_OUTPUT
+
   setup:
     name: Setup
+    needs: parse-config
     uses: subhamay-bhattacharyya-gha/setup-aws-environments-wf/.github/workflows/setup-environments.yaml@main
     with:
-      ci-environment: ${{ github.event.inputs.ci-environment }}
-      devl-environment: ${{ github.event.inputs.devl-environment }}
-      test-environment: ${{ github.event.inputs.test-environment }}
-      prod-environment: ${{ github.event.inputs.prod-environment }}
-      aws-region: ${{ github.event.inputs.aws-region }}
+      ci-environment: ${{ needs.parse-config.outputs.ci-environment }}
+      devl-environment: ${{ needs.parse-config.outputs.devl-environment }}
+      test-environment: ${{ needs.parse-config.outputs.test-environment }}
+      prod-environment: ${{ needs.parse-config.outputs.prod-environment }}
+      aws-region: ${{ needs.parse-config.outputs.aws-region }}
     secrets:
       GH_PAT: ${{ secrets.GH_PAT }}
 
 ```
+
+## 📋 Sample Caller Workflow
+
+Here's a complete example of how to use this reusable workflow in your own project:
+
+**File: `.github/workflows/setup-environments.yaml`**
+
+```yaml
+name: Setup AWS Environments
+run-name: Setup AWS Environments in ${{ github.ref_name }}
+
+on:
+  push:
+    paths:
+      - 'environments.yaml'
+      - '.github/workflows/setup-environments.yaml'
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  actions: write
+  deployments: write
+
+jobs:
+  parse-config:
+    name: Parse Configuration
+    runs-on: ubuntu-latest
+    outputs:
+      ci-environment: ${{ steps.config.outputs.ci-environment }}
+      devl-environment: ${{ steps.config.outputs.devl-environment }}
+      test-environment: ${{ steps.config.outputs.test-environment }}
+      prod-environment: ${{ steps.config.outputs.prod-environment }}
+      aws-region: ${{ steps.config.outputs.aws-region }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read environments.yaml
+        id: config
+        run: |
+          ci_env=$(yq -r '.ci.account_name' environments.yaml)
+          devl_env=$(yq -r '.devl.account_name' environments.yaml)
+          test_env=$(yq -r '.test.account_name' environments.yaml)
+          prod_env=$(yq -r '.prod.account_name' environments.yaml)
+          region=$(yq -r '.aws_region' environments.yaml)
+          
+          echo "ci-environment=$ci_env" >> $GITHUB_OUTPUT
+          echo "devl-environment=$devl_env" >> $GITHUB_OUTPUT
+          echo "test-environment=$test_env" >> $GITHUB_OUTPUT
+          echo "prod-environment=$prod_env" >> $GITHUB_OUTPUT
+          echo "aws-region=$region" >> $GITHUB_OUTPUT
+
+  setup-environments:
+    name: Setup Environments
+    needs: parse-config
+    uses: subhamay-bhattacharyya-gha/setup-aws-environments-wf/.github/workflows/setup-environments.yaml@v1
+    with:
+      ci-environment: ${{ needs.parse-config.outputs.ci-environment }}
+      devl-environment: ${{ needs.parse-config.outputs.devl-environment }}
+      test-environment: ${{ needs.parse-config.outputs.test-environment }}
+      prod-environment: ${{ needs.parse-config.outputs.prod-environment }}
+      aws-region: ${{ needs.parse-config.outputs.aws-region }}
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}
+
+  verify-setup:
+    name: Verify Setup
+    needs: setup-environments
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [ci, devl, test, prod]
+    environment: ${{ matrix.environment }}
+    steps:
+      - name: Verify Environment Variables
+        run: |
+          echo "Environment: ${{ matrix.environment }}"
+          echo "AWS Region: ${{ vars.AWS_REGION }}"
+          echo "✓ Environment setup verified"
+```
+
+**File: `environments.yaml`**
+
+```yaml
+aws_region: us-east-1
+
+ci:
+  account_name: ci-ou-a
+
+devl:
+  account_name: devl-ou-a
+
+test:
+  account_name: test-ou-a
+
+prod:
+  account_name: prod-ou-a
+```
+
+### Key Points for Caller Workflow
+
+1. **Configuration as Code**: Store environment configuration in `environments.yaml` instead of manual inputs
+2. **Automated Execution**: Workflow runs automatically on:
+   - Push to `environments.yaml` (config changes)
+   - Manual dispatch via `workflow_dispatch`
+3. **Parse Configuration Job**: The `parse-config` job reads the YAML file and outputs values using `yq`
+4. **Version Tags**: Replace `@v1` with a specific version tag like `@v1.1.0` for production use
+5. **Permissions**: Ensure your caller workflow has the required permissions:
+   - `id-token: write` for OIDC
+   - `actions: write` for environment management
+   - `deployments: write` for deployment environment management
+6. **Secrets Management**: The `GH_PAT` token must have:
+   - `repo` scope for repository access
+   - `workflow` scope for workflow management
+   - `admin:repo_hook` scope for webhook management
+7. **Repository Configuration**: Your repository must define:
+   - `AWS_ACCOUNTS`: JSON map of account names to AWS Account IDs
+   - `AWS_OIDC_ROLE`: Name of the IAM role for OIDC authentication
 
 ## Inputs
 
