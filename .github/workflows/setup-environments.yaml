@@ -38,10 +38,10 @@ jobs:
           ```yaml
           ---
           environments:
-            - ci: ci-account-alias
-            - devl: devl-account-alias
-            - test: test-account-alias
-            - prod: prod-account-alias
+            ci: ci-account-alias
+            devl: devl-account-alias
+            test: test-account-alias
+            prod: prod-account-alias
           regions:
             - us-east-1
             - us-east-2
@@ -61,8 +61,8 @@ jobs:
             exit 1
           }
 
-          ci_env=$(yq eval '.environments[] | select(has("ci")) | .ci' .env/environments.yaml)
-          if [ -z "$ci_env" ]; then
+          ci_env=$(yq eval '.environments.ci' .env/environments.yaml)
+          if [ -z "$ci_env" ] || [ "$ci_env" == "null" ]; then
             echo "❌ ci environment is mandatory but not found"
             exit 1
           fi
@@ -78,8 +78,8 @@ jobs:
           echo "::group::Parsing environment configuration"
 
           # Read environments from YAML
-          environments=$(yq eval '.environments[]' .env/environments.yaml | yq -s 'map(keys[0]) | join(",")')
-          regions=$(yq eval '.regions[]' .env/environments.yaml | tr '\n' ',' | sed 's/,$//')
+          environments=$(yq eval '.environments | keys | join(",")' .env/environments.yaml)
+          regions=$(yq eval '.regions | join(",")' .env/environments.yaml)
 
           if [ -z "$regions" ]; then
             regions="us-east-1"
@@ -164,7 +164,7 @@ jobs:
           regions_array=(${{ steps.parse-config.outputs.regions }})
 
           # Process CI environment (non-regional)
-          ci_account=$(yq eval '.environments[] | select(has("ci")) | .ci' .env/environments.yaml)
+          ci_account=$(yq eval '.environments.ci' .env/environments.yaml)
           ci_account_id=$(echo "$AWS_ACCOUNT_ID_MAP" | jq -r --arg name "$ci_account" '.[$name]')
 
           echo "Creating CI environment"
@@ -180,7 +180,7 @@ jobs:
 
           # Process other environments (regional)
           for env_type in devl test prod; do
-            account=$(yq eval ".environments[] | select(has(\"$env_type\")) | .$env_type" .env/environments.yaml)
+            account=$(yq eval ".environments.$env_type" .env/environments.yaml)
             if [ -z "$account" ] || [ "$account" == "null" ]; then
               continue
             fi
@@ -277,7 +277,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          environments=$(yq eval '.environments[]' .env/environments.yaml | yq -s 'map(keys[0]) | join(",")')
+          environments=$(yq eval '.environments | keys | join(",")' .env/environments.yaml)
           echo "environments=$environments" >> $GITHUB_OUTPUT
 
       - name: Create branch protection rules for main branch
