@@ -216,6 +216,13 @@ jobs:
 
           echo "::group::Creating branch protection rules"
 
+          # Delete existing rulesets to ensure clean state
+          rulesets=$(gh api "/repos/${GITHUB_REPOSITORY}/rulesets" --jq '.rulesets[].id' || true)
+          for ruleset_id in $rulesets; do
+            echo "Deleting existing ruleset: $ruleset_id"
+            gh api --method DELETE "/repos/${GITHUB_REPOSITORY}/rulesets/$ruleset_id" || true
+          done
+
           ruleset_payload=$(cat <<'RULESET_EOF'
           {
             "name": "Branch Protection - Feature & Bug",
@@ -281,6 +288,13 @@ jobs:
           set -euo pipefail
 
           echo "::group::Creating main branch protection rules"
+
+          # Delete existing rulesets to ensure clean state
+          rulesets=$(gh api "/repos/${GITHUB_REPOSITORY}/rulesets" --jq '.rulesets[].id' || true)
+          for ruleset_id in $rulesets; do
+            echo "Deleting existing ruleset: $ruleset_id"
+            gh api --method DELETE "/repos/${GITHUB_REPOSITORY}/rulesets/$ruleset_id" || true
+          done
 
           ruleset_payload=$(cat <<'RULESET_EOF'
           {
