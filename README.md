@@ -41,17 +41,6 @@ jobs:
 
 Create a `.env/environments.yaml` file in your repository with the following structure:
 
-```yaml
-environments:
-  ci: AWS-SCS-C03-DEVL
-  devl: AWS-SCS-C03-DEVL
-  test: AWS-SCS-C03-TEST
-  prod: AWS-SCS-C03-PROD
-regions:
-  - us-east-1
-  - us-east-2
-```
-
 **Environment Structure:**
 
 - `ci` environment is required
@@ -70,7 +59,7 @@ regions:
   - us-east-1
 ```
 
-**Complete Configuration (All Environments):**
+**Typical Configuration (CI + Development + Test + Production):**
 
 ```yaml
 environments:
@@ -80,8 +69,19 @@ environments:
   prod: AWS-SCS-C03-PROD
 regions:
   - us-east-1
-  - us-west-2
-  - eu-west-1
+```
+
+**Complete Configuration (All Environments and multi-region):**
+
+```yaml
+environments:
+  ci: AWS-SCS-C03-DEVL
+  devl: AWS-SCS-C03-DEVL
+  test: AWS-SCS-C03-TEST
+  prod: AWS-SCS-C03-PROD
+regions:
+  - us-east-1
+  - us-east-2
 ```
 
 ### Key Points
