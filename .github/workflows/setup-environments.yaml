@@ -162,6 +162,7 @@ jobs:
           echo "::group::Creating environments and setting secrets/variables"
 
           regions_array=(${{ steps.parse-config.outputs.regions }})
+          num_regions=${#regions_array[@]}
 
           # Process CI environment (non-regional)
           ci_account=$(yq eval '.environments.ci' .env/environments.yaml)
@@ -185,7 +186,11 @@ jobs:
             account_id=$(echo "$AWS_ACCOUNT_ID_MAP" | jq -r --arg name "$account" '.[$name]')
 
             for region in "${regions_array[@]}"; do
-              env_name="${env_type}-${region}"
+              if [ $num_regions -eq 1 ]; then
+                env_name="${env_type}"
+              else
+                env_name="${env_type}-${region}"
+              fi
               echo "Creating environment: $env_name"
 
               gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/$env_name"
