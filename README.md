@@ -111,9 +111,9 @@ permissions:
 2. **Parses** environment and region configuration from YAML
 3. **Manages CODEOWNERS**: Adds CODEOWNERS team members as repository collaborators
 4. **Deletes** existing GitHub environments to ensure clean setup
-5. **Creates GitHub Environments** for each environment/region combination:
-   - **CI**: Single non-regional environment
-   - **Other environments** (devl, test, prod): Regional environments in format `{type}-{account}-{region}`
+5. **Creates GitHub Environments** with conditional naming:
+   - **Single region**: `ci`, `devl`, `test`, `prod`
+   - **Multiple regions**: `ci`, `devl-{region}`, `test-{region}`, `prod-{region}`
 6. **Sets variables** in each environment:
    - `AWS_REGION`: Target AWS region
    - `S3_KMS_KEY_ALIAS`: KMS key for S3 encryption
