@@ -38,7 +38,8 @@ dist/
 *.tgz
 
 # Misc
-.env
+.env/*
+!.env/environments.yaml
 .env.local
 .env.production
 .env.test
