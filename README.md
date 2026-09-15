@@ -149,9 +149,9 @@ permissions:
 5. **Sets variables** in each environment:
    - `AWS_ENVIRONMENT`: Environment type (ci, devl, test, prod)
    - `AWS_REGION`: Target AWS region
+   - `AWS_ACCOUNT_ID`: AWS account ID for the environment
    - `S3_KMS_KEY_ALIAS`: KMS key for S3 encryption
    - `TF_STATE_BUCKET_ARN`: S3 bucket ARN for Terraform state
-   - `AWS_ROLE_ARN`: OIDC role ARN
 
 ## Requirements
 
