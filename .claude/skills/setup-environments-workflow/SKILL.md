@@ -47,183 +47,26 @@ The `setup-environments.yaml` workflow:
 
 2. **Parses Environment File** - Reads environment configuration and regions from the validated YAML file
 
-3. **Parses CODEOWNERS** - Extracts GitHub usernames/teams from the CODEOWNERS file
+3. **Deletes Existing Environments** - Clears old GitHub environments from the repository
 
-4. **Adds Collaborators** - Grants push access to all CODEOWNERS entries
+4. **Creates New Environments** - Creates CI environment (single instance) and regional environments (one per region) for devl, test, and prod
+   - Single region: `ci`, `devl`, `test`, `prod`
+   - Multiple regions: `ci`, `devl-{region}`, `test-{region}`, `prod-{region}`
 
-5. **Deletes Existing Environments** - Clears old GitHub environments from the repository
+5. **Configures Environment Variables**:
+   - `AWS_ENVIRONMENT`: Environment type (ci, devl, test, prod)
+   - `AWS_REGION`: Target AWS region
+   - `S3_KMS_KEY_ALIAS`: KMS key alias for S3 bucket encryption
+   - `TF_STATE_BUCKET_ARN`: S3 bucket ARN for Terraform state (in arn:aws:s3:::bucket-name format)
+   - `AWS_ROLE_ARN`: OIDC role ARN for AWS authentication
 
-6. **Creates New Environments** - Creates CI environment (single instance) and regional environments (one per region) for devl, test, and prod
+## Branch Protection
 
-7. **Configures Environment Secrets & Variables**:
-   - Secrets: `AWS_ROLE_ARN`, `TF_STATE_BUCKET_NAME`
-   - Variables: `AWS_REGION`, `S3_KMS_KEY_ALIAS`, `TF_STATE_BUCKET_NAME`, `AWS_ROLE_ARN`
+Branch protection rules (for `feature/*`, `bug/*`, and `main` branches) are **no longer managed by this workflow**. Instead, use **Organization repository rules** for consistent enforcement across all repositories in your organization.
 
-## Branch Protection Rules Job
+## Collaborator Management
 
-After the `setup-environments` job completes successfully, the `setup-branch-protection` job runs to configure branch protection rules for the repository.
-
-### Job Behavior
-
-The `setup-branch-protection` job:
-
-1. **Applies Branch Protection Rules** - Configures ruleset for feature and bug branches
-2. **Enforces Code Review** - Requires 1 approval from code owners before merging
-3. **Validates Branch Naming** - Enforces naming pattern: `feature/*` or `bug/*`
-4. **Prevents Force Pushes** - Blocks non-fast-forward pushes on protected branches
-5. **Dismisses Stale Reviews** - Automatically dismisses outdated reviews when new commits are pushed
-
-### Branch Protection Configuration
-
-The branch protection rules are automatically applied to branches matching the pattern:
-
-- **Include**: `refs/heads/feature/*`, `refs/heads/bug/*`
-- **Exclude**: None
-
-### Rules Applied
-
-```json
-{
-  "name": "Branch Protection - Feature & Bug ",
-  "target": "branch",
-  "enforcement": "active",
-  "conditions": {
-    "ref_name": {
-      "include": [
-        "refs/heads/feature/*",
-        "refs/heads/bug/*"
-      ],
-      "exclude": []
-    }
-  },
-  "rules": [
-    {
-      "type": "creation",
-      "parameters": {}
-    },
-    {
-      "type": "non_fast_forward",
-      "parameters": {}
-    },
-    {
-      "type": "pull_request",
-      "parameters": {
-        "required_approving_review_count": 1,
-        "require_code_owner_reviews": true,
-        "dismiss_stale_reviews": true,
-        "require_last_push_approval": false
-      }
-    },
-    {
-      "type": "branch_name_pattern",
-      "parameters": {
-        "operator": "regex",
-        "pattern": "^(feature|bug)\\/[a-zA-Z0-9\\-_.]+)$"
-      }
-    }
-  ]
-}
-```
-
-**Rule Details:**
-
-| Rule | Purpose |
-| --- | --- |
-| `creation` | Allow branch creation on protected branches |
-| `non_fast_forward` | Prevent force pushes and rewrites on protected branches |
-| `pull_request` | Require pull request reviews before merging with code owner approval |
-| `branch_name_pattern` | Enforce naming convention: branches must start with `feature/` or `bug/` followed by alphanumeric characters, hyphens, underscores, or dots |
-
-**Pull Request Requirements:**
-
-- Minimum 1 approving review required
-- Code owner review required
-- Stale reviews dismissed automatically
-- Last push approval not required
-
-## Main Branch Protection Job
-
-After the `setup-branch-protection` job completes successfully, the `setup-main-branch-protection` job runs to configure stringent protection rules for the main branch.
-
-### Job Behavior
-
-The `setup-main-branch-protection` job:
-
-1. **Applies Main Branch Protection Rules** - Configures ruleset specifically for the main production branch
-2. **Prevents Deletion** - Blocks deletion of the main branch
-3. **Prevents Force Pushes** - Blocks non-fast-forward pushes to maintain history integrity
-4. **Requires Pull Request Review** - Requires at least 1 approval before merging
-5. **Requires Deployment Environments** - Ensures code is deployed to CI and development environments before main branch integration
-
-### Branch Protection Configuration
-
-The branch protection rules are applied to the main branch:
-
-- **Include**: `refs/heads/main`
-- **Exclude**: None
-
-### Rules Applied
-
-```json
-{
-  "name": "Main Branch Protection",
-  "target": "branch",
-  "enforcement": "active",
-  "conditions": {
-    "ref_name": {
-      "include": [
-        "refs/heads/main"
-      ],
-      "exclude": []
-    }
-  },
-  "rules": [
-    {
-      "type": "deletion",
-      "parameters": {}
-    },
-    {
-      "type": "non_fast_forward",
-      "parameters": {}
-    },
-    {
-      "type": "pull_request",
-      "parameters": {
-        "required_approving_review_count": 1
-      }
-    },
-    {
-      "type": "required_deployments",
-      "parameters": {
-        "required_deployment_environments": [
-          "ci","devl"
-        ]
-      }
-    }
-  ]
-}
-```
-
-**Rule Details:**
-
-| Rule | Purpose |
-| --- | --- |
-| `deletion` | Prevent accidental or intentional deletion of the main branch |
-| `non_fast_forward` | Prevent force pushes and rewrites on the main branch to preserve commit history |
-| `pull_request` | Require pull request reviews before merging changes to main |
-| `required_deployments` | Ensure code is deployed to CI and development environments before main branch integration |
-
-**Pull Request Requirements:**
-
-- Minimum 1 approving review required
-- Code must be successfully deployed to: `ci`, `devl` environments
-
-**Key Differences from Feature/Bug Branch Protection:**
-
-- Main branch cannot be deleted
-- Requires successful deployment to CI and development before merging
-- Only requires 1 approval (no code owner requirement)
-- No branch naming pattern enforcement (main is protected by name directly)
+CODEOWNERS and team access are **no longer managed by this workflow**. Instead, manage teams and permissions at the **Organization level** for consistent access control across all repositories.
 
 ## Configuration Format
 
@@ -255,10 +98,10 @@ The configuration file at `.env/environments.yaml` must follow this exact format
 ```yaml
 ---
 environments:
-  - ci: ci-account-alias
-  - devl: devl-account-alias
-  - test: test-account-alias
-  - prod: prod-account-alias
+  ci: ci-account-alias
+  devl: devl-account-alias
+  test: test-account-alias
+  prod: prod-account-alias
 regions:
   - us-east-1
   - us-east-2
@@ -268,7 +111,7 @@ regions:
 
 - `ci` - **Mandatory** - Must always be specified
 - `devl`, `test`, `prod` - **Optional** - Include only the environments you need
-- `regions` - **Optional** - List of AWS regions (if omitted, no region-specific environments are created)
+- `regions` - **Mandatory** - List of AWS regions (if omitted, defaults to `us-east-1`)
 
 ### JSON Schema Definition
 
@@ -335,48 +178,52 @@ For validation purposes, the configuration file must conform to the following sc
 Each account alias must correspond to a key in the `AWS_ACCOUNT_ID_MAP` organization variable.
 
 - **CI Environment**: Single environment named `ci` (not replicated across regions)
-- **Regional Environments** (devl, test, prod): One environment per region, named as `{environment}-{account-alias}-{region}`
-  - Example: `devl-my-devl-account-us-east-1`, `devl-my-devl-account-us-east-2`
+- **Regional Environments** (devl, test, prod):
+  - **Single region**: Environments named `{environment}` (e.g., `devl`, `test`, `prod`)
+  - **Multiple regions**: One environment per region, named as `{environment}-{region}` (e.g., `devl-us-east-1`, `devl-us-east-2`)
 
 ### Configuration Examples
 
-**Full configuration (all environments + multiple regions):**
+**Single Region (Minimal):**
 
 ```yaml
----
 environments:
-  - ci: my-ci-account
-  - devl: my-devl-account
-  - test: my-test-account
-  - prod: my-prod-account
+  ci: my-ci-account
+  devl: my-devl-account
+regions:
+  - us-east-1
+```
+
+**Created environments:** `ci`, `devl`
+
+**Single Region (Production):**
+
+```yaml
+environments:
+  ci: my-ci-account
+  devl: my-devl-account
+  test: my-test-account
+  prod: my-prod-account
+regions:
+  - us-east-1
+```
+
+**Created environments:** `ci`, `devl`, `test`, `prod`
+
+**Multi-Region (Production):**
+
+```yaml
+environments:
+  ci: my-ci-account
+  devl: my-devl-account
+  test: my-test-account
+  prod: my-prod-account
 regions:
   - us-east-1
   - us-east-2
 ```
 
-**Created environments:** `ci`, `devl-my-devl-account-us-east-1`, `devl-my-devl-account-us-east-2`, `test-my-test-account-us-east-1`, `test-my-test-account-us-east-2`, `prod-my-prod-account-us-east-1`, `prod-my-prod-account-us-east-2`
-
-**Minimal configuration (CI only):**
-
-```yaml
----
-environments:
-  - ci: my-ci-account
-```
-
-**Selective configuration (specific environments + regions):**
-
-```yaml
----
-environments:
-  - ci: my-ci-account
-  - prod: my-prod-account
-regions:
-  - us-east-1
-  - us-west-2
-```
-
-**Created environments:** `ci`, `prod-my-prod-account-us-east-1`, `prod-my-prod-account-us-west-2`
+**Created environments:** `ci`, `devl-us-east-1`, `devl-us-east-2`, `test-us-east-1`, `test-us-east-2`, `prod-us-east-1`, `prod-us-east-2`
 
 ## Required and Optional Organization Variables
 
@@ -416,12 +263,11 @@ The following variables are read from organization variables. If not defined, th
 In your repository, create `.env/environments.yaml` (note: the directory and filename are required):
 
 ```yaml
----
 environments:
-  - ci: my-ci-account
-  - devl: my-devl-account
-  - test: my-test-account
-  - prod: my-prod-account
+  ci: my-ci-account
+  devl: my-devl-account
+  test: my-test-account
+  prod: my-prod-account
 regions:
   - us-east-1
   - us-east-2
