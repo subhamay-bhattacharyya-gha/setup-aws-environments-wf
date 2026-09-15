@@ -1,3 +1,11 @@
+## [1.2.1](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.2.0...v1.2.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* update CODEOWNERS to correct team reference ([6754557](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/6754557652614bfdfa25af5c978bb224499319c5))
+* update CODEOWNERS to correct team reference ([36980b3](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/36980b3546a0feae248a4e51d590edaa7c9a10ba))
+
 # [1.2.0](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.1.0...v1.2.0) (2026-09-14)
 
 
