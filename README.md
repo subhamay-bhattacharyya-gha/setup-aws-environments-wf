@@ -41,15 +41,15 @@ jobs:
 
 Create a `.env/environments.yaml` file in your repository with the following structure:
 
-**Environment Structure:**
+### Environment Structure
 
-- `ci` environment is required
-- `devl`, `test`, `prod` are optional
+- `ci` environment is **required**
+- `devl`, `test`, `prod` are **optional**
 - Specify one or more AWS regions (defaults to `us-east-1` if omitted)
 
-### Examples
+### Configuration Examples
 
-**Minimal Configuration (CI + Development):**
+**Single Region (Minimal):**
 
 ```yaml
 environments:
@@ -59,7 +59,9 @@ regions:
   - us-east-1
 ```
 
-**Typical Configuration (CI + Development + Test + Production):**
+Creates environments: `ci`, `devl`
+
+**Single Region (Production):**
 
 ```yaml
 environments:
@@ -71,7 +73,9 @@ regions:
   - us-east-1
 ```
 
-**Complete Configuration (All Environments and multi-region):**
+Creates environments: `ci`, `devl`, `test`, `prod`
+
+**Multi-Region (Production):**
 
 ```yaml
 environments:
@@ -84,13 +88,15 @@ regions:
   - us-east-2
 ```
 
+Creates environments: `ci`, `devl-us-east-1`, `devl-us-east-2`, `test-us-east-1`, `test-us-east-2`, `prod-us-east-1`, `prod-us-east-2`
+
 ### Key Points
 
 1. **Configuration as Code**: Store environment configuration in `.env/environments.yaml`
-2. **Automated Execution**: Workflow runs automatically on:
-   - Push to `.env/environments.yaml` (config changes)
-   - Push to `.github/workflows/setup-environments.yaml` (workflow changes)
-   - Manual dispatch via `workflow_dispatch`
+2. **Automated Execution**: Trigger the workflow on:
+   - Push to `.env/environments.yaml` (when configuration changes)
+   - Manual dispatch via `workflow_dispatch` in calling workflow
+   - Or as needed by your CI/CD pipeline
 3. **Version Tags**: Use a specific version tag like `@v1.1.0` for production use
 4. **Permissions**: Ensure your workflow has the required permissions:
    - `contents: write` to read/validate config files
@@ -112,6 +118,14 @@ regions:
 |----------|----------------------------------------------------------------|----------|
 | `GH_PAT` | GitHub Personal Access Token with `repo` and `workflow` scopes | ✅       |
 
+## Branch Protection
+
+Branch protection rules (for `feature/*`, `bug/*`, and `main` branches) should be configured using **Organization repository rules** rather than through this workflow. This ensures consistent enforcement across all repositories in your organization.
+
+## Collaborator Management
+
+CODEOWNERS and team access should be managed at the **Organization level** through GitHub teams rather than through this workflow. This provides consistent access control across all repositories.
+
 ## Permissions Required
 
 This workflow requires the following permissions:
@@ -128,19 +142,16 @@ permissions:
 
 1. **Validates** the `.env/environments.yaml` configuration file
 2. **Parses** environment and region configuration from YAML
-3. **Manages CODEOWNERS**: Adds CODEOWNERS team members as repository collaborators
-4. **Deletes** existing GitHub environments to ensure clean setup
-5. **Creates GitHub Environments** with conditional naming:
+3. **Deletes** existing GitHub environments to ensure clean setup
+4. **Creates GitHub Environments** with conditional naming:
    - **Single region**: `ci`, `devl`, `test`, `prod`
    - **Multiple regions**: `ci`, `devl-{region}`, `test-{region}`, `prod-{region}`
-6. **Sets variables** in each environment:
+5. **Sets variables** in each environment:
    - `AWS_ENVIRONMENT`: Environment type (ci, devl, test, prod)
    - `AWS_REGION`: Target AWS region
    - `S3_KMS_KEY_ALIAS`: KMS key for S3 encryption
    - `TF_STATE_BUCKET_ARN`: S3 bucket ARN for Terraform state
    - `AWS_ROLE_ARN`: OIDC role ARN
-7. **Sets up branch protection** rules for `feature/*` and `bug/*` branches
-8. **Sets up main branch protection** with required deployments to `ci` and `devl`
 
 ## Requirements
 
