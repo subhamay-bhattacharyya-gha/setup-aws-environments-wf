@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.2.1...v1.3.0) (2026-09-15)
+
+
+### Features
+
+* bump version to 1.2.1 and update release configuration to include package.json ([4e537a7](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/4e537a701c7b7b02ab75e821a5ab1c5eeba4b932))
+
 ## [1.2.1](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.2.0...v1.2.1) (2026-09-15)
 
 
