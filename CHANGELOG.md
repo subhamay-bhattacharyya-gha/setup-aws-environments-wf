@@ -1,3 +1,18 @@
+# [1.4.0](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.3.0...v1.4.0) (2026-09-25)
+
+
+### Bug Fixes
+
+* add defaults for organization variables and debug logging for CFN_TEMPLATE_S3_BUCKET_NAME ([651afa2](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/651afa20f75bc60852ff540d8b98e21227c863d9))
+* handle single region case in environment creation output ([0901d1c](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/0901d1cb5eed4c6fc2fc11585781b92890f35a5f))
+* update CFN_TEMPLATE_S3_BUCKET_NAME format in workflow documentation ([b2c4249](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/b2c424959719f180f3e86fa1aa086bc5a62ec9b7))
+
+
+### Features
+
+* add CFN_TEMPLATE_S3_BUCKET_NAME environment variable to workflow ([fd869a2](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/fd869a20c71ecd818396e2101805a48b65d56c6e))
+* add CloudFormation template S3 bucket name variable and update workflow configurations ([af10a24](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/af10a24d5bc387a0d8e33fa5e53f237a08c1a099))
+
 # [1.3.0](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.2.1...v1.3.0) (2026-09-15)
 
 
