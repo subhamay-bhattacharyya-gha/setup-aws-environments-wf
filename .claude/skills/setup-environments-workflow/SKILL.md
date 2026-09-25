@@ -59,7 +59,7 @@ The `setup-environments.yaml` workflow:
    - `AWS_ACCOUNT_ID`: AWS account ID for the environment
    - `S3_KMS_KEY_ALIAS`: KMS key alias for S3 bucket encryption
    - `TF_STATE_BUCKET_ARN`: S3 bucket ARN for Terraform state (in arn:aws:s3:::bucket-name format)
-   - `CFN_TEMPLATE_S3_BUCKET_NAME`: Base name for the CloudFormation template S3 bucket, formatted as `${env.CFN_TEMPLATE_S3_BUCKET_NAME}-${env.AWS_ACCOUNT_ID}-${env.AWS_REGION}`
+   - `CFN_TEMPLATE_S3_BUCKET_NAME`: Complete name for the CloudFormation template S3 bucket, formatted as `${env.CFN_TEMPLATE_BUCKET_BASE_NAME}-${env.AWS_ACCOUNT_ID}-${env.AWS_REGION}`
 
 ## Branch Protection
 
