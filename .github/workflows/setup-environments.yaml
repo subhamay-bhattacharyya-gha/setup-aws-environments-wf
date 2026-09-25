@@ -16,7 +16,7 @@ permissions:
 jobs:
   setup-environments:
     name: Bootstrap Environments
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout repository
@@ -121,10 +121,16 @@ jobs:
           AWS_OIDC_ROLE: ${{ vars.AWS_OIDC_ROLE }}
           TF_STATE_BUCKET_BASE_NAME: ${{ vars.TF_STATE_BUCKET_BASE_NAME }}
           S3_KMS_KEY_ALIAS: ${{ vars.S3_KMS_KEY_ALIAS }}
+          CFN_TEMPLATE_BUCKET_BASE_NAME: ${{ vars.CFN_TEMPLATE_BUCKET_BASE_NAME }}
         run: |
           set -euo pipefail
 
           echo "::group::Creating environments and setting secrets/variables"
+
+          # Set defaults for organization variables if not provided
+          CFN_TEMPLATE_BUCKET_BASE_NAME="${CFN_TEMPLATE_BUCKET_BASE_NAME:-subhamay-cfn-templates-bucket}"
+          TF_STATE_BUCKET_BASE_NAME="${TF_STATE_BUCKET_BASE_NAME:-terraform-state-bucket}"
+          S3_KMS_KEY_ALIAS="${S3_KMS_KEY_ALIAS:-SB-KMS}"
 
           regions_array=(${{ steps.parse-config.outputs.regions }})
           num_regions=${#regions_array[@]}
@@ -143,6 +149,8 @@ jobs:
           gh variable set AWS_ACCOUNT_ID --env "ci" --body "${ci_account_id}"
           gh variable set S3_KMS_KEY_ALIAS --env "ci" --body "alias/${S3_KMS_KEY_ALIAS}"
           gh variable set TF_STATE_BUCKET_ARN --env "ci" --body "arn:aws:s3:::${TF_STATE_BUCKET_BASE_NAME}-${ci_account_id}-ci-${regions_array[0]}"
+          echo "Setting CFN_TEMPLATE_S3_BUCKET_NAME with value: ${CFN_TEMPLATE_BUCKET_BASE_NAME}-${ci_account_id}-${regions_array[0]}"
+          gh variable set CFN_TEMPLATE_S3_BUCKET_NAME --env "ci" --body "${CFN_TEMPLATE_BUCKET_BASE_NAME}-${ci_account_id}-${regions_array[0]}"
 
           # Process other environments (regional)
           for env_type in devl test prod; do
@@ -169,6 +177,8 @@ jobs:
               gh variable set AWS_ACCOUNT_ID --env "$env_name" --body "${account_id}"
               gh variable set S3_KMS_KEY_ALIAS --env "$env_name" --body "alias/${S3_KMS_KEY_ALIAS}"
               gh variable set TF_STATE_BUCKET_ARN --env "$env_name" --body "arn:aws:s3:::${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_type}-${region}"
+              echo "Setting CFN_TEMPLATE_S3_BUCKET_NAME for $env_name with value: ${CFN_TEMPLATE_BUCKET_BASE_NAME}-${account_id}-${region}"
+              gh variable set CFN_TEMPLATE_S3_BUCKET_NAME --env "$env_name" --body "${CFN_TEMPLATE_BUCKET_BASE_NAME}-${account_id}-${region}"
             done
           done
 
@@ -183,6 +193,8 @@ jobs:
             echo "|---|---|"
             for env in "${created_envs[@]}"; do
               if [ "$env" == "ci" ]; then
+                echo "| \`$env\` | ${regions_array[0]} |"
+              elif [ $num_regions -eq 1 ]; then
                 echo "| \`$env\` | ${regions_array[0]} |"
               else
                 region=$(echo "$env" | cut -d'-' -f2-)
