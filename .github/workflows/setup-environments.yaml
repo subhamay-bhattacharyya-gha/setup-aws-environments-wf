@@ -194,6 +194,8 @@ jobs:
             for env in "${created_envs[@]}"; do
               if [ "$env" == "ci" ]; then
                 echo "| \`$env\` | ${regions_array[0]} |"
+              elif [ $num_regions -eq 1 ]; then
+                echo "| \`$env\` | ${regions_array[0]} |"
               else
                 region=$(echo "$env" | cut -d'-' -f2-)
                 echo "| \`$env\` | $region |"
