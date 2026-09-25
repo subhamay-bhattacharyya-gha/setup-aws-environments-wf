@@ -121,6 +121,7 @@ jobs:
           AWS_OIDC_ROLE: ${{ vars.AWS_OIDC_ROLE }}
           TF_STATE_BUCKET_BASE_NAME: ${{ vars.TF_STATE_BUCKET_BASE_NAME }}
           S3_KMS_KEY_ALIAS: ${{ vars.S3_KMS_KEY_ALIAS }}
+          CFN_TEMPLATE_BUCKET_BASE_NAME: ${{ vars.CFN_TEMPLATE_BUCKET_BASE_NAME }}
         run: |
           set -euo pipefail
 
@@ -143,6 +144,7 @@ jobs:
           gh variable set AWS_ACCOUNT_ID --env "ci" --body "${ci_account_id}"
           gh variable set S3_KMS_KEY_ALIAS --env "ci" --body "alias/${S3_KMS_KEY_ALIAS}"
           gh variable set TF_STATE_BUCKET_ARN --env "ci" --body "arn:aws:s3:::${TF_STATE_BUCKET_BASE_NAME}-${ci_account_id}-ci-${regions_array[0]}"
+          gh variable set CFN_TEMPLATE_S3_BUCKET_NAME --env "ci" --body "${CFN_TEMPLATE_BUCKET_BASE_NAME}-${ci_account_id}-${regions_array[0]}"
 
           # Process other environments (regional)
           for env_type in devl test prod; do
@@ -169,6 +171,7 @@ jobs:
               gh variable set AWS_ACCOUNT_ID --env "$env_name" --body "${account_id}"
               gh variable set S3_KMS_KEY_ALIAS --env "$env_name" --body "alias/${S3_KMS_KEY_ALIAS}"
               gh variable set TF_STATE_BUCKET_ARN --env "$env_name" --body "arn:aws:s3:::${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_type}-${region}"
+              gh variable set CFN_TEMPLATE_S3_BUCKET_NAME --env "$env_name" --body "${CFN_TEMPLATE_BUCKET_BASE_NAME}-${account_id}-${region}"
             done
           done
 
