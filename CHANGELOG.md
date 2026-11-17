@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.4.0...v1.5.0) (2026-11-17)
+
+
+### Features
+
+* Add three new repository environement variables ([d6757a4](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/d6757a41915b93603d0b2324245cd2d4fb41e4b7))
+
 # [1.4.0](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.3.0...v1.4.0) (2026-09-25)
 
 
