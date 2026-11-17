@@ -122,6 +122,9 @@ jobs:
           TF_STATE_BUCKET_BASE_NAME: ${{ vars.TF_STATE_BUCKET_BASE_NAME }}
           S3_KMS_KEY_ALIAS: ${{ vars.S3_KMS_KEY_ALIAS }}
           CFN_TEMPLATE_BUCKET_BASE_NAME: ${{ vars.CFN_TEMPLATE_BUCKET_BASE_NAME }}
+          LAMBDA_PACKAGES_BUCKET_BASE_NAME: ${{ vars.LAMBDA_PACKAGES_BUCKET_BASE_NAME }}
+          GLUE_SCRIPTS_BUCKET_BASE_NAME: ${{ vars.GLUE_SCRIPTS_BUCKET_BASE_NAME }}
+          STATE_MACHINE_BUCKET_BASE_NAME: ${{ vars.STATE_MACHINE_BUCKET_BASE_NAME }}
         run: |
           set -euo pipefail
 
@@ -131,6 +134,9 @@ jobs:
           CFN_TEMPLATE_BUCKET_BASE_NAME="${CFN_TEMPLATE_BUCKET_BASE_NAME:-subhamay-cfn-templates-bucket}"
           TF_STATE_BUCKET_BASE_NAME="${TF_STATE_BUCKET_BASE_NAME:-terraform-state-bucket}"
           S3_KMS_KEY_ALIAS="${S3_KMS_KEY_ALIAS:-SB-KMS}"
+          LAMBDA_PACKAGES_BUCKET_BASE_NAME="${LAMBDA_PACKAGES_BUCKET_BASE_NAME:-subhamay-lambda-packages-bucket}"
+          GLUE_SCRIPTS_BUCKET_BASE_NAME="${GLUE_SCRIPTS_BUCKET_BASE_NAME:-subhamay-glue-scripts-bucket}"
+          STATE_MACHINE_BUCKET_BASE_NAME="${STATE_MACHINE_BUCKET_BASE_NAME:-subhamay-state-machine-bucket}"
 
           regions_array=(${{ steps.parse-config.outputs.regions }})
           num_regions=${#regions_array[@]}
@@ -151,6 +157,9 @@ jobs:
           gh variable set TF_STATE_BUCKET_ARN --env "ci" --body "arn:aws:s3:::${TF_STATE_BUCKET_BASE_NAME}-${ci_account_id}-ci-${regions_array[0]}"
           echo "Setting CFN_TEMPLATE_S3_BUCKET_NAME with value: ${CFN_TEMPLATE_BUCKET_BASE_NAME}-${ci_account_id}-${regions_array[0]}"
           gh variable set CFN_TEMPLATE_S3_BUCKET_NAME --env "ci" --body "${CFN_TEMPLATE_BUCKET_BASE_NAME}-${ci_account_id}-${regions_array[0]}"
+          gh variable set LAMBDA_PACKAGES_BUCKET_NAME --env "ci" --body "${LAMBDA_PACKAGES_BUCKET_BASE_NAME}-${ci_account_id}-${regions_array[0]}"
+          gh variable set GLUE_SCRIPTS_BUCKET_NAME --env "ci" --body "${GLUE_SCRIPTS_BUCKET_BASE_NAME}-${ci_account_id}-${regions_array[0]}"
+          gh variable set STATE_MACHINE_BUCKET_NAME --env "ci" --body "${STATE_MACHINE_BUCKET_BASE_NAME}-${ci_account_id}-${regions_array[0]}"
 
           # Process other environments (regional)
           for env_type in devl test prod; do
@@ -179,6 +188,9 @@ jobs:
               gh variable set TF_STATE_BUCKET_ARN --env "$env_name" --body "arn:aws:s3:::${TF_STATE_BUCKET_BASE_NAME}-${account_id}-${env_type}-${region}"
               echo "Setting CFN_TEMPLATE_S3_BUCKET_NAME for $env_name with value: ${CFN_TEMPLATE_BUCKET_BASE_NAME}-${account_id}-${region}"
               gh variable set CFN_TEMPLATE_S3_BUCKET_NAME --env "$env_name" --body "${CFN_TEMPLATE_BUCKET_BASE_NAME}-${account_id}-${region}"
+              gh variable set LAMBDA_PACKAGES_BUCKET_NAME --env "$env_name" --body "${LAMBDA_PACKAGES_BUCKET_BASE_NAME}-${account_id}-${region}"
+              gh variable set GLUE_SCRIPTS_BUCKET_NAME --env "$env_name" --body "${GLUE_SCRIPTS_BUCKET_BASE_NAME}-${account_id}-${region}"
+              gh variable set STATE_MACHINE_BUCKET_NAME --env "$env_name" --body "${STATE_MACHINE_BUCKET_BASE_NAME}-${account_id}-${region}"
             done
           done
 
