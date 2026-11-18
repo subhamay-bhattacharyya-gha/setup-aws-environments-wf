@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.5.0...v1.6.0) (2026-11-18)
+
+
+### Features
+
+* Rename S3 bucket environment variables for clarity and update documentation ([a1625c1](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/a1625c1c5c74560bbcc9f4596504ad798c16f686))
+
 # [1.5.0](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.4.0...v1.5.0) (2026-11-17)
 
 
