@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.6.0...v1.6.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* add missing space in bucket variable gh commands ([8289573](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/commit/8289573b6fb1f3dfdef127b8c54185e3d70bc945))
+
 # [1.6.0](https://github.com/subhamay-bhattacharyya-gha/setup-aws-environments-wf/compare/v1.5.0...v1.6.0) (2026-11-18)
 
 
