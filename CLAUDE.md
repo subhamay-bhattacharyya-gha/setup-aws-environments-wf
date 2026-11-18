@@ -31,6 +31,21 @@ Commit types determine version bumps:
 
 - Required: **24.10.0** (pinned in `release.yaml` and `package.json`)
 
+## Bucket Name Variables
+
+The workflow (`.github/workflows/setup-environments.yaml`) derives S3 bucket names per environment from base-name inputs:
+
+| Input (repository variable)        | Derived environment variable     |
+| ---------------------------------- | -------------------------------- |
+| `CFN_TEMPLATE_BUCKET_BASE_NAME`    | `CFN_TEMPLATE_S3_BUCKET_NAME`    |
+| `LAMBDA_PACKAGES_BUCKET_BASE_NAME` | `LAMBDA_PACKAGES_S3_BUCKET_NAME` |
+| `GLUE_SCRIPTS_BUCKET_BASE_NAME`    | `GLUE_SCRIPTS_S3_BUCKET_NAME`    |
+| `STATE_MACHINE_BUCKET_BASE_NAME`   | `STATE_MACHINE_S3_BUCKET_NAME`   |
+
+- Derived names follow `<base name>-<account ID>-<region>`.
+- When adding a bucket, set both the base-name input and the derived `*_S3_BUCKET_NAME` variable in the `ci` block and the regional loop of the workflow.
+- Keep the `*_S3_BUCKET_NAME` suffix so names state that they refer to S3 buckets.
+
 ## Bash Style
 
 Workflows use strict mode:

@@ -123,6 +123,10 @@ Creates environments: `ci`, `devl-us-east-1`, `devl-us-east-2`, `test-us-east-1`
    - `AWS_ACCOUNT_ID_MAP`: JSON map of account names to AWS Account IDs
    - `AWS_OIDC_ROLE`: Name of the IAM role for OIDC authentication
    - `TF_STATE_BUCKET_BASE_NAME`: Base name for Terraform state S3 buckets
+   - `CFN_TEMPLATE_BUCKET_BASE_NAME`: Base name for CloudFormation template S3 buckets
+   - `LAMBDA_PACKAGES_BUCKET_BASE_NAME`: Base name for Lambda package S3 buckets
+   - `GLUE_SCRIPTS_BUCKET_BASE_NAME`: Base name for Glue script S3 buckets
+   - `STATE_MACHINE_BUCKET_BASE_NAME`: Base name for Step Functions state machine S3 buckets
    - `S3_KMS_KEY_ALIAS`: KMS key alias for S3 bucket encryption
 
 ## Secrets
@@ -165,6 +169,12 @@ permissions:
    - `AWS_ACCOUNT_ID`: AWS account ID for the environment
    - `S3_KMS_KEY_ALIAS`: KMS key for S3 encryption
    - `TF_STATE_BUCKET_ARN`: S3 bucket ARN for Terraform state
+   - `CFN_TEMPLATE_S3_BUCKET_NAME`: S3 bucket name for CloudFormation templates
+   - `LAMBDA_PACKAGES_S3_BUCKET_NAME`: S3 bucket name for Lambda packages
+   - `GLUE_SCRIPTS_S3_BUCKET_NAME`: S3 bucket name for Glue scripts
+   - `STATE_MACHINE_S3_BUCKET_NAME`: S3 bucket name for Step Functions state machines
+
+   Bucket names are formatted as `<base name>-<account ID>-<region>` (for `ci`, the first configured region).
 
 ## Requirements
 
@@ -184,6 +194,14 @@ Your repository must have the following variables defined:
 - **`AWS_OIDC_ROLE`**: Name of the IAM role to assume via OIDC in each AWS account (e.g., `GithubActionsRole`)
 
 - **`TF_STATE_BUCKET_BASE_NAME`**: Base name for Terraform state S3 buckets (e.g., `myorg-tfstate`)
+
+- **`CFN_TEMPLATE_BUCKET_BASE_NAME`**: Base name for CloudFormation template S3 buckets (default: `subhamay-cfn-templates-bucket`)
+
+- **`LAMBDA_PACKAGES_BUCKET_BASE_NAME`**: Base name for Lambda package S3 buckets (default: `subhamay-lambda-packages-bucket`)
+
+- **`GLUE_SCRIPTS_BUCKET_BASE_NAME`**: Base name for Glue script S3 buckets (default: `subhamay-glue-scripts-bucket`)
+
+- **`STATE_MACHINE_BUCKET_BASE_NAME`**: Base name for Step Functions state machine S3 buckets (default: `subhamay-state-machine-bucket`)
 
 - **`S3_KMS_KEY_ALIAS`**: KMS key alias for S3 bucket encryption (e.g., `tfstate-encryption`)
 
